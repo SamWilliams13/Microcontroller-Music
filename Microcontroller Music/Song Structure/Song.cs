@@ -192,6 +192,11 @@ namespace Microcontroller_Music
             return BPM;
         }
 
+        public void SetBPM(int newBPM)
+        {
+            BPM = newBPM;
+        }
+
         public string GetTitle()
         {
             return Title;

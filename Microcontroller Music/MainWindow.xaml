@@ -55,7 +55,7 @@
             </MenuItem>
             <MenuItem Header="_Song">
                 <MenuItem x:Name="addtrack" Header="Add Track" Click="addtrack_Click"/>
-                <MenuItem x:Name ="bpm" Header="Change BPM" Click="bpm_Click"/>
+                <MenuItem x:Name ="bpm" Header="BPM: 120" Click="bpm_Click"/>
                 <MenuItem x:Name="changetitle"  Header="Change Title" Click="changetitle_Click"/>
             </MenuItem>
             <Slider x:Name="Zoom" Orientation="Horizontal" Value="1800" Maximum="3600" Minimum="100" ValueChanged="Zoom_ValueChanged" Width="100"/>

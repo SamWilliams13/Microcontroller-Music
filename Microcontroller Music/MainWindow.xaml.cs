@@ -201,6 +201,7 @@ namespace Microcontroller_Music
                 int.TryParse(createSong.Tempo.Text, out tempo);
                 NewFile(createSong.SongTitle.Text, tempo, createSong.KeySig.SelectedIndex - 7, createSong.TimeSigTop.SelectedIndex + 2,
                     (int)Math.Pow(2, createSong.TimeSigBottom.SelectedIndex + 1), createSong.TrackTitle.Text, createSong.Key.SelectedIndex);
+                bpm.Header = "BPM: " + s.GetBPM();
             }
         }
 
@@ -211,6 +212,7 @@ namespace Microcontroller_Music
             if (fileOpen.ShowDialog() == true)
             {
                 OpenFile(fileOpen.FileName);
+                bpm.Header = "BPM: " + s.GetBPM();
             }
         }
 
@@ -404,22 +406,28 @@ namespace Microcontroller_Music
 
         private void TrackDeleteClick(object sender, RoutedEventArgs e)
         {
-            if (!s.DeleteTrack(track))
+            if (GenerateYesNoDialog("Confirm Action", "Are you sure you want to delete this track?"))
             {
-                addtrack_Click(sender, e);
-                TrackDeleteClick(sender, e);
+                if (!s.DeleteTrack(track))
+                {
+                    addtrack_Click(sender, e);
+                    s.DeleteTrack(track);
+                }
+                drawer.DrawPage(ref SheetMusic, (int)Zoom.Value);
             }
-            drawer.DrawPage(ref SheetMusic, (int)Zoom.Value);
         }
 
         private void BarDeleteClick(object sender, RoutedEventArgs e)
         {
-            if (!s.DeleteBar(bar))
+            if (GenerateYesNoDialog("Confirm Action", "Are you sure you want to delete this bar?"))
             {
-                s.NewBar(0);
-                s.DeleteBar(bar);
+                if (!s.DeleteBar(bar))
+                {
+                    s.NewBar(0);
+                    s.DeleteBar(bar);
+                }
+                drawer.DrawPage(ref SheetMusic, (int)Zoom.Value);
             }
-            drawer.DrawPage(ref SheetMusic, (int)Zoom.Value);
         }
 
         private void staccatoClick(object sender, RoutedEventArgs e)
@@ -577,7 +585,27 @@ namespace Microcontroller_Music
 
         private void bpm_Click(object sender, RoutedEventArgs e)
         {
-
+            BPMChange newBPMDialog = new BPMChange();
+            if(newBPMDialog.ShowDialog() == true)
+            {
+                int newBPM = 120;
+                if(newBPMDialog.GetNewBPM(ref newBPM))
+                {
+                    if (newBPM < 30 || newBPM > 300)
+                    {
+                        GenerateErrorDialog("Error", "Tempo out of accepted range (30-300)");
+                    }
+                    else
+                    {
+                        s.SetBPM(newBPM);
+                        bpm.Header = "BPM: " + newBPM;
+                    }
+                }
+                else
+                {
+                    GenerateErrorDialog("Error", "Not a number.");
+                }
+            }
         }
 
         private void changetitle_Click(object sender, RoutedEventArgs e)

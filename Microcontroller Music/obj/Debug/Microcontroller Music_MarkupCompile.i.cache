@@ -10,11 +10,11 @@ none
 false
 DEBUG;TRACE
 D:\Libraries\Documents\GitHub\Microcontroller-Music\Microcontroller Music\App.xaml
-6-984768318
+71861719615
 
-21-131918812
+22-1648005192
 17-339395520
-CreateSongPopup.xaml;CreateTrackPopup.xaml;MainWindow.xaml;MIDIDetails.xaml;TimeSigChange.xaml;TitleChange.xaml;
+BPMChange.xaml;CreateSongPopup.xaml;CreateTrackPopup.xaml;MainWindow.xaml;MIDIDetails.xaml;TimeSigChange.xaml;TitleChange.xaml;
 
 True
 
