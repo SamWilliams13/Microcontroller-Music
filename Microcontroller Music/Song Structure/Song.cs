@@ -196,6 +196,11 @@ namespace Microcontroller_Music
         {
             return Title;
         }
+
+        public void SetTitle(string title)
+        {
+            Title = title;
+        }
         #endregion
         #region accessing tracks
         public Track GetTracks(int track)

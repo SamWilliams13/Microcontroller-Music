@@ -99,6 +99,9 @@
     <Compile Include="TimeSigChange.xaml.cs">
       <DependentUpon>TimeSigChange.xaml</DependentUpon>
     </Compile>
+    <Compile Include="TitleChange.xaml.cs">
+      <DependentUpon>TitleChange.xaml</DependentUpon>
+    </Compile>
     <Page Include="CreateSongPopup.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -126,6 +129,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="TimeSigChange.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="TitleChange.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

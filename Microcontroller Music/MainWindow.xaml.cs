@@ -582,12 +582,12 @@ namespace Microcontroller_Music
 
         private void changetitle_Click(object sender, RoutedEventArgs e)
         {
-
-        }
-
-        private void changekeysig_Click(object sender, RoutedEventArgs e)
-        {
-
+            TitleChange newTitleDialog = new TitleChange();
+            if(newTitleDialog.ShowDialog() == true)
+            {
+                s.SetTitle(newTitleDialog.GetNewTItle());
+                drawer.DrawPage(ref SheetMusic, (int)Zoom.Value);
+            }
         }
 
         private void RadioButton_Checked(object sender, RoutedEventArgs e)

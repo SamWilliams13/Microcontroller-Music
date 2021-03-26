@@ -4,17 +4,17 @@
 winexe
 C#
 .cs
-D:\Libraries\Documents\Visual Studio 2019\Projects\Microcontroller Music\Microcontroller Music\obj\Debug\
+D:\Libraries\Documents\GitHub\Microcontroller-Music\Microcontroller Music\obj\Debug\
 Microcontroller_Music
 none
 false
 DEBUG;TRACE
-D:\Libraries\Documents\Visual Studio 2019\Projects\Microcontroller Music\Microcontroller Music\App.xaml
-51784782222
+D:\Libraries\Documents\GitHub\Microcontroller-Music\Microcontroller Music\App.xaml
+6-984768318
 
-201148936040
-171871036984
-CreateSongPopup.xaml;CreateTrackPopup.xaml;MainWindow.xaml;MIDIDetails.xaml;TimeSigChange.xaml;
+21-131918812
+17-339395520
+CreateSongPopup.xaml;CreateTrackPopup.xaml;MainWindow.xaml;MIDIDetails.xaml;TimeSigChange.xaml;TitleChange.xaml;
 
 True
 

@@ -1,0 +1,15 @@
+﻿<Window x:Class="Microcontroller_Music.TitleChange"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Microcontroller_Music"
+        mc:Ignorable="d"
+        Title="TitleChange" Height="122.838" Width="674.73">
+    <Grid>
+        <Label x:Name="label" Content="New Title:" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
+        <TextBox x:Name="textBox" HorizontalAlignment="Left" Height="26" Margin="77,10,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="580"/>
+        <Button x:Name="button" Content="OK" HorizontalAlignment="Left" Margin="582,62,0,0" VerticalAlignment="Top" Width="75" Click="button_Click" />
+
+    </Grid>
+</Window>

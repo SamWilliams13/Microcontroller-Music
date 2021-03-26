@@ -49,3 +49,5 @@ D:\Libraries\Documents\GitHub\Microcontroller-Music\Microcontroller Music\obj\De
 D:\Libraries\Documents\GitHub\Microcontroller-Music\Microcontroller Music\obj\Debug\Microcontroller Music.csproj.CopyComplete
 D:\Libraries\Documents\GitHub\Microcontroller-Music\Microcontroller Music\obj\Debug\Microcontroller Music.exe
 D:\Libraries\Documents\GitHub\Microcontroller-Music\Microcontroller Music\obj\Debug\Microcontroller Music.pdb
+D:\Libraries\Documents\GitHub\Microcontroller-Music\Microcontroller Music\obj\Debug\TitleChange.g.cs
+D:\Libraries\Documents\GitHub\Microcontroller-Music\Microcontroller Music\obj\Debug\TitleChange.baml
