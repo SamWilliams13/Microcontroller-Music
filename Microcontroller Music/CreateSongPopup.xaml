@@ -1,0 +1,66 @@
+﻿<Window x:Class="Microcontroller_Music.CreateSongPopup"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Microcontroller_Music"
+        mc:Ignorable="d"
+        Title="CreateSongPopup" Height="187.297" Width="618.578">
+    <Grid Height="167" VerticalAlignment="Top">
+        <Label x:Name="label" Content="Title" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" RenderTransformOrigin="-0.342,-0.379"/>
+        <Label x:Name="label1" Content="Key Signature:" HorizontalAlignment="Left" Margin="10,41,0,0" VerticalAlignment="Top"/>
+        <Label x:Name="label1_Copy1" Content="Time Signature:" HorizontalAlignment="Left" Margin="10,104,0,0" VerticalAlignment="Top"/>
+        <Label x:Name="label1_Copy" Content="First Track Name:" HorizontalAlignment="Left" Margin="308,51,0,0" VerticalAlignment="Top"/>
+        <Label x:Name="label1_Copy2" Content="First Track Key:" HorizontalAlignment="Left" Margin="308,77,0,0" VerticalAlignment="Top" Height="27"/>
+        <TextBox x:Name="SongTitle" HorizontalAlignment="Left" Height="23" Margin="114,13,0,0" TextWrapping="Wrap" Text="Song 1" VerticalAlignment="Top" Width="487"/>
+        <TextBox x:Name="TrackTitle" HorizontalAlignment="Left" Height="23" Margin="413,54,0,0" TextWrapping="Wrap" Text="Track1" VerticalAlignment="Top" Width="188"/>
+
+        <ComboBox x:Name="Key" HorizontalAlignment="Left" Margin="413,82,0,0" VerticalAlignment="Top" Width="107" SelectedIndex="0">
+            <ComboBoxItem Content="Treble"/>
+            <ComboBoxItem Content="Bass"/>
+        </ComboBox>
+        <ComboBox x:Name="TimeSigTop" HorizontalAlignment="Left" Margin="114,101,0,0" VerticalAlignment="Top" Width="120" RenderTransformOrigin="0.494,-0.088" Height="23" SelectedIndex="2">
+            <ComboBoxItem Content="2"/>
+            <ComboBoxItem Content="3"/>
+            <ComboBoxItem Content="4"/>
+            <ComboBoxItem Content="5"/>
+            <ComboBoxItem Content="6"/>
+            <ComboBoxItem Content="7"/>
+            <ComboBoxItem Content="8"/>
+            <ComboBoxItem Content="9"/>
+            <ComboBoxItem Content="10"/>
+            <ComboBoxItem Content="11"/>
+            <ComboBoxItem Content="12"/>
+            <ComboBoxItem Content="13"/>
+            <ComboBoxItem Content="14"/>
+            <ComboBoxItem Content="15"/>
+            <ComboBoxItem Content="16"/>
+        </ComboBox>
+        <ComboBox x:Name="TimeSigBottom" HorizontalAlignment="Left" Margin="114,124,0,0" VerticalAlignment="Top" Width="120" SelectedIndex="1" SelectionChanged="TimeSigBottom_SelectionChanged">
+            <ComboBoxItem Content="2"/>
+            <ComboBoxItem Content="4"/>
+            <ComboBoxItem Content="8"/>
+        </ComboBox>
+        <ComboBox x:Name="KeySig" HorizontalAlignment="Left" Margin="114,41,0,0" VerticalAlignment="Top" Width="163" SelectedIndex="7">
+            <ComboBoxItem Content="Cb Major (7b)"/>
+            <ComboBoxItem Content="Gb Major / Eb Minor (6b)"/>
+            <ComboBoxItem Content="Db Major / Bb Minor (5b)"/>
+            <ComboBoxItem Content="Ab Major / F Minor (4b)"/>
+            <ComboBoxItem Content="Eb Major / C Minor (3b)"/>
+            <ComboBoxItem Content="Bb Major / G Minor (2b)"/>
+            <ComboBoxItem Content="F Major / D Minor (1b)"/>
+            <ComboBoxItem Content="C Major / A Minor"/>
+            <ComboBoxItem Content="G Major / E Minor (1#)"/>
+            <ComboBoxItem Content="D Major / B Minor (2#)"/>
+            <ComboBoxItem Content="A Major / F# Minor (3#)"/>
+            <ComboBoxItem Content="E Major / C# Minor (4#)"/>
+            <ComboBoxItem Content="B Major / G# Minor (5#)"/>
+            <ComboBoxItem Content="F# Major / D# Minor (6#)"/>
+            <ComboBoxItem Content="C# Major (7#)"/>
+        </ComboBox>
+        <Button x:Name="OKButton" Content="OK" HorizontalAlignment="Left" Margin="501,124,0,0" VerticalAlignment="Top" Width="75" Click="button_Click"/>
+        <TextBox x:Name="Tempo" HorizontalAlignment="Left" Margin="114,68,0,0" VerticalAlignment="Top" Width="143" Text="120"/>
+        <Label x:Name="label1_Copy3" Content="Tempo:" HorizontalAlignment="Left" Margin="10,67,0,0" VerticalAlignment="Top"/>
+
+    </Grid>
+</Window>

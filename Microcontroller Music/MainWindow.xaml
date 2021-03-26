@@ -1,0 +1,77 @@
+﻿<!--<sets default size and says you can resize - may remove depending on amount of errors caused./-->
+    <Window x:Class="Microcontroller_Music.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Microcontroller_Music"
+        mc:Ignorable="d"
+        Title="Microcontroller Music"
+            Height="600" Width="1000"
+            ResizeMode="CanResize"
+            WindowState="Maximized"
+            Closing="Window_Closing" 
+           > 
+    <Grid Background="White" x:Name="WindowGrid">
+        <Grid.RowDefinitions>
+            <!--<top - for menu/-->
+            <RowDefinition x:Name ="MenuHeight" Height="25"></RowDefinition>
+            <!--<bottom - main section/-->
+            <RowDefinition x:Name="ScrollHeight"></RowDefinition>
+            <RowDefinition x:Name="StatusHeight" Height="30"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <!--<left - the main section/-->
+            <ColumnDefinition x:Name="ScrollWidth"/>
+            <!--<toolbar side/-->
+            <ColumnDefinition x:Name="ToolbarWidth" Width="100"/> 
+        </Grid.ColumnDefinitions>
+        <!--<this is where the canvas goes so you can scroll/-->
+        <ScrollViewer  Grid.Row="1" x:Name="MainScroll" HorizontalAlignment="Stretch" VerticalAlignment="Top" HorizontalScrollBarVisibility="Auto" >
+            <!--<test image for when the canvas fails for whatever reason<Image Source="D:\Libraries\Pictures\tbshs.png"/>/-->
+                <!--<this is where the sheet music is drawn and interacted with/-->
+            <Canvas x:Name="SheetMusic" 
+                    HorizontalAlignment="Center" 
+                    Background="#FFFFFE" 
+                    Width="1800" 
+                    PreviewMouseLeftButtonDown="SheetMusic_MouseLeftButtonDown" 
+                    PreviewMouseMove="SheetMusic_PreviewMouseMove"
+                    PreviewMouseRightButtonDown="SheetMusic_PreviewMouseRightButtonDown">
+            </Canvas>
+        </ScrollViewer>
+        <StatusBar Grid.Row="2" x:Name="statusBar" HorizontalAlignment="Stretch" VerticalAlignment="Bottom">
+            <StatusBarItem x:Name="statusItem">
+            </StatusBarItem>
+        </StatusBar>
+                   
+        <!--<this is where the Top bar is defined for controls/-->
+        <Menu x:Name="TopBar" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2">
+            <MenuItem Header="_File">
+                <MenuItem Header="_New..." Click="createNewFile"/>
+                <MenuItem Header="_Open..." Click="openExistingFile"/>
+                <Separator/>
+                <MenuItem Header="_Save..." Click="saveCurrentFile"/>
+                <MenuItem Header="_Save As..." Click="saveCurrentFileAs"/>
+            </MenuItem>
+            <MenuItem Header="_Song">
+                <MenuItem x:Name="addtrack" Header="Add Track" Click="addtrack_Click"/>
+                <MenuItem x:Name ="bpm" Header="Change BPM" Click="bpm_Click"/>
+                <MenuItem x:Name="changetitle"  Header="Change Title" Click="changetitle_Click"/>
+            </MenuItem>
+            <Slider x:Name="Zoom" Orientation="Horizontal" Value="1800" Maximum="3600" Minimum="100" ValueChanged="Zoom_ValueChanged" Width="100"/>
+            <Button x:Name="Play_Button" Content="Play" Click="Play_Button_Click"/>
+        </Menu>
+        <!--<this is the toolbar. it has buttons for all the types of notes./-->
+        <StackPanel x:Name="ToolBox" Grid.Column="1" Grid.Row="1" Grid.RowSpan="2">
+
+            <RadioButton GroupName="NoteType" Checked="RadioButton_Checked" Content="Semiquaver"></RadioButton>
+            <RadioButton GroupName="NoteType" Checked="RadioButton_Checked" Content="Quaver" IsChecked="True"></RadioButton>
+            <RadioButton GroupName="NoteType"  Checked="RadioButton_Checked" Content="Crotchet"></RadioButton>
+            <RadioButton GroupName="NoteType"  Checked="RadioButton_Checked" Content="Minim"></RadioButton>
+            <RadioButton GroupName="NoteType"  Checked="RadioButton_Checked" Content="Semibreve"></RadioButton>
+            <RadioButton GroupName="NoteType"  Checked="RadioButton_Checked" Content="Dotted Quaver"></RadioButton>
+            <RadioButton GroupName="NoteType"  Checked="RadioButton_Checked" Content="Dotted Crotchet"></RadioButton>
+            <RadioButton GroupName="NoteType"  Checked="RadioButton_Checked" Content="Dotted Minim"></RadioButton>
+        </StackPanel>
+    </Grid>
+</Window>

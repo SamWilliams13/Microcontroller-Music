@@ -1,0 +1,117 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="Microcontroller_Music.App" Collapsed="true">
+    <Position X="7.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>App.xaml.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Microcontroller_Music.CreateSongPopup" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="11.25" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>CreateSongPopup.xaml.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="1.148" Collapsed="true" />
+  </Class>
+  <Class Name="Microcontroller_Music.MainWindow" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="11" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>KCAAQAAAAAgAAAAQABAgAgAIAQAAAEAAAYAACAAAAAg=</HashCode>
+      <FileName>MainWindow.xaml.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="Microcontroller_Music.MIDIDetails" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="9.5" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AACAAFAAgAIACEAAABAAAAAIEBAAkAAAAAAAAABQAgA=</HashCode>
+      <FileName>MIDIDetails.xaml.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="Microcontroller_Music.Drawer" Collapsed="true">
+    <Position X="13" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EQBAkGkgAANCBACAEAKEFAAAACBAAGFEoDQEIYFBBDA=</HashCode>
+      <FileName>Outputs\Drawer.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Microcontroller_Music.MIDIWriter" Collapsed="true">
+    <Position X="0.5" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAQAAAAAEAAAAAAAAACAAAAACAAAAAEAoAACABEAAAA=</HashCode>
+      <FileName>Outputs\MIDIWriter.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Microcontroller_Music.Writer" Collapsed="true">
+    <Position X="0.5" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAEAEAAAAAAAEAAAA=</HashCode>
+      <FileName>Outputs\Writer.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Microcontroller_Music.Bar" Collapsed="true">
+    <Position X="5.25" Y="3.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>IkhkAABEEABIQEAABBAIoABEAAAAEAiwAQRQIAAIAAE=</HashCode>
+      <FileName>Song Structure\Bar.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Microcontroller_Music.Note" Collapsed="true">
+    <Position X="0.75" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAIAAAAAAAABEAAACAIAIAABAgAAAAgCAJAIAAAAEE=</HashCode>
+      <FileName>Song Structure\Note.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Microcontroller_Music.Rest" Collapsed="true">
+    <Position X="3" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Song Structure\Rest.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Microcontroller_Music.Song" Collapsed="true">
+    <Position X="8" Y="2.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>gkAkAACIQEAIQGEAABAEgAIEgQAACACAAIBVIAAJAIU=</HashCode>
+      <FileName>Song Structure\Song.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Microcontroller_Music.Symbol" Collapsed="true">
+    <Position X="3" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAQAAABAAAAABAAAAAAAAAAAIAIAAAAAg=</HashCode>
+      <FileName>Song Structure\Symbol.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Microcontroller_Music.Track" Collapsed="true">
+    <Position X="9.75" Y="3.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AkEEAACIAAAAQGEAAAEEAAQEAAAACACQAABAJAAJBAE=</HashCode>
+      <FileName>Song Structure\Track.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Microcontroller_Music.Tuplet" Collapsed="true">
+    <Position X="5.25" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAIAAAAAAAIBIAAACAIBIAAAAgAAEAgAAIAIgAAAAE=</HashCode>
+      <FileName>Song Structure\Tuplet.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Microcontroller_Music.Properties.Resources" Collapsed="true">
+    <Position X="11.25" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAABEAAAAQAAAAAAAAAAAAAAAIA=</HashCode>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Microcontroller_Music.Properties.Settings" Collapsed="true">
+    <Position X="13" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAIAAAAAABAAAAAAAAAAAAAAA=</HashCode>
+    </TypeIdentifier>
+  </Class>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

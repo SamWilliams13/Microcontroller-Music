@@ -1,0 +1,51 @@
+D:\Libraries\Documents\Visual Studio 2019\Projects\Microcontroller Music\Microcontroller Music\bin\Debug\Microcontroller Music.exe.config
+D:\Libraries\Documents\Visual Studio 2019\Projects\Microcontroller Music\Microcontroller Music\bin\Debug\Microcontroller Music.exe
+D:\Libraries\Documents\Visual Studio 2019\Projects\Microcontroller Music\Microcontroller Music\bin\Debug\Microcontroller Music.pdb
+D:\Libraries\Documents\Visual Studio 2019\Projects\Microcontroller Music\Microcontroller Music\obj\Debug\Microcontroller Music.csprojAssemblyReference.cache
+D:\Libraries\Documents\Visual Studio 2019\Projects\Microcontroller Music\Microcontroller Music\obj\Debug\MainWindow.g.cs
+D:\Libraries\Documents\Visual Studio 2019\Projects\Microcontroller Music\Microcontroller Music\obj\Debug\App.g.cs
+D:\Libraries\Documents\Visual Studio 2019\Projects\Microcontroller Music\Microcontroller Music\obj\Debug\Microcontroller Music_MarkupCompile.cache
+D:\Libraries\Documents\Visual Studio 2019\Projects\Microcontroller Music\Microcontroller Music\obj\Debug\Microcontroller Music_MarkupCompile.lref
+D:\Libraries\Documents\Visual Studio 2019\Projects\Microcontroller Music\Microcontroller Music\obj\Debug\MainWindow.baml
+D:\Libraries\Documents\Visual Studio 2019\Projects\Microcontroller Music\Microcontroller Music\obj\Debug\Microcontroller Music.g.resources
+D:\Libraries\Documents\Visual Studio 2019\Projects\Microcontroller Music\Microcontroller Music\obj\Debug\Microcontroller_Music.Properties.Resources.resources
+D:\Libraries\Documents\Visual Studio 2019\Projects\Microcontroller Music\Microcontroller Music\obj\Debug\Microcontroller Music.csproj.GenerateResource.cache
+D:\Libraries\Documents\Visual Studio 2019\Projects\Microcontroller Music\Microcontroller Music\obj\Debug\Microcontroller Music.csproj.CoreCompileInputs.cache
+D:\Libraries\Documents\Visual Studio 2019\Projects\Microcontroller Music\Microcontroller Music\obj\Debug\Microcontroller Music.exe
+D:\Libraries\Documents\Visual Studio 2019\Projects\Microcontroller Music\Microcontroller Music\obj\Debug\Microcontroller Music.pdb
+D:\Libraries\Documents\Visual Studio 2019\Projects\Microcontroller Music\Microcontroller Music\bin\Debug\Midi.dll
+D:\Libraries\Documents\Visual Studio 2019\Projects\Microcontroller Music\Microcontroller Music\bin\Debug\Midi.xml
+D:\Libraries\Documents\Visual Studio 2019\Projects\Microcontroller Music\Microcontroller Music\obj\Debug\MIDIDetails.g.cs
+D:\Libraries\Documents\Visual Studio 2019\Projects\Microcontroller Music\Microcontroller Music\obj\Debug\MIDIDetails.baml
+D:\Libraries\Documents\Visual Studio 2019\Projects\Microcontroller Music\Microcontroller Music\obj\Debug\Microcontroller Music.csproj.CopyComplete
+D:\Libraries\Documents\Visual Studio 2019\Projects\Microcontroller Music\Microcontroller Music\obj\Debug\CreateSongPopup.g.cs
+D:\Libraries\Documents\Visual Studio 2019\Projects\Microcontroller Music\Microcontroller Music\obj\Debug\CreateSongPopup.baml
+D:\Libraries\Documents\Visual Studio 2019\Projects\Microcontroller Music\Microcontroller Music\obj\Debug\CreateTrackPopup.g.cs
+D:\Libraries\Documents\Visual Studio 2019\Projects\Microcontroller Music\Microcontroller Music\obj\Debug\CreateTrackPopup.baml
+D:\Libraries\Documents\Visual Studio 2019\Projects\Microcontroller Music\Microcontroller Music\obj\Debug\TimeSigChange.g.cs
+D:\Libraries\Documents\Visual Studio 2019\Projects\Microcontroller Music\Microcontroller Music\obj\Debug\TimeSigChange.baml
+D:\Libraries\Documents\GitHub\Microcontroller-Music\Microcontroller Music\bin\Debug\Microcontroller Music.exe.config
+D:\Libraries\Documents\GitHub\Microcontroller-Music\Microcontroller Music\bin\Debug\Microcontroller Music.exe
+D:\Libraries\Documents\GitHub\Microcontroller-Music\Microcontroller Music\bin\Debug\Microcontroller Music.pdb
+D:\Libraries\Documents\GitHub\Microcontroller-Music\Microcontroller Music\bin\Debug\Midi.xml
+D:\Libraries\Documents\GitHub\Microcontroller-Music\Microcontroller Music\obj\Debug\Microcontroller Music.csprojAssemblyReference.cache
+D:\Libraries\Documents\GitHub\Microcontroller-Music\Microcontroller Music\obj\Debug\CreateSongPopup.g.cs
+D:\Libraries\Documents\GitHub\Microcontroller-Music\Microcontroller Music\obj\Debug\CreateTrackPopup.g.cs
+D:\Libraries\Documents\GitHub\Microcontroller-Music\Microcontroller Music\obj\Debug\MainWindow.g.cs
+D:\Libraries\Documents\GitHub\Microcontroller-Music\Microcontroller Music\obj\Debug\MIDIDetails.g.cs
+D:\Libraries\Documents\GitHub\Microcontroller-Music\Microcontroller Music\obj\Debug\TimeSigChange.g.cs
+D:\Libraries\Documents\GitHub\Microcontroller-Music\Microcontroller Music\obj\Debug\App.g.cs
+D:\Libraries\Documents\GitHub\Microcontroller-Music\Microcontroller Music\obj\Debug\Microcontroller Music_MarkupCompile.cache
+D:\Libraries\Documents\GitHub\Microcontroller-Music\Microcontroller Music\obj\Debug\Microcontroller Music_MarkupCompile.lref
+D:\Libraries\Documents\GitHub\Microcontroller-Music\Microcontroller Music\obj\Debug\CreateSongPopup.baml
+D:\Libraries\Documents\GitHub\Microcontroller-Music\Microcontroller Music\obj\Debug\CreateTrackPopup.baml
+D:\Libraries\Documents\GitHub\Microcontroller-Music\Microcontroller Music\obj\Debug\MainWindow.baml
+D:\Libraries\Documents\GitHub\Microcontroller-Music\Microcontroller Music\obj\Debug\MIDIDetails.baml
+D:\Libraries\Documents\GitHub\Microcontroller-Music\Microcontroller Music\obj\Debug\TimeSigChange.baml
+D:\Libraries\Documents\GitHub\Microcontroller-Music\Microcontroller Music\obj\Debug\Microcontroller Music.g.resources
+D:\Libraries\Documents\GitHub\Microcontroller-Music\Microcontroller Music\obj\Debug\Microcontroller_Music.Properties.Resources.resources
+D:\Libraries\Documents\GitHub\Microcontroller-Music\Microcontroller Music\obj\Debug\Microcontroller Music.csproj.GenerateResource.cache
+D:\Libraries\Documents\GitHub\Microcontroller-Music\Microcontroller Music\obj\Debug\Microcontroller Music.csproj.CoreCompileInputs.cache
+D:\Libraries\Documents\GitHub\Microcontroller-Music\Microcontroller Music\obj\Debug\Microcontroller Music.csproj.CopyComplete
+D:\Libraries\Documents\GitHub\Microcontroller-Music\Microcontroller Music\obj\Debug\Microcontroller Music.exe
+D:\Libraries\Documents\GitHub\Microcontroller-Music\Microcontroller Music\obj\Debug\Microcontroller Music.pdb

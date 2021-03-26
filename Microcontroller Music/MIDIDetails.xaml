@@ -1,0 +1,32 @@
+﻿<!--xaml for the main window of the program, which displays a song on canvas and allows the user to edit and pick outputs.
+    WindowStartupLocation opens dialog in centre of application
+    Closing="Window_Closing" captures an attempt to quit out of the menu and gives a yes/no dialog for cancellation-->
+    <Window x:Class="Microcontroller_Music.MIDIDetails"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Microcontroller_Music"
+        mc:Ignorable="d"
+        Closing="Window_Closing"
+        WindowStartupLocation="CenterOwner" 
+        ResizeMode="NoResize"
+        Title="MIDIDetails" Height="450" Width="670">
+
+    <!--sets up a grid to add things to from code-->
+    <Grid Name="MainGrid">
+        <!--sets up 2 columns to add to-->
+        <Grid.ColumnDefinitions> 
+            <ColumnDefinition Width="200"/>
+            <ColumnDefinition Width="450"/>
+        </Grid.ColumnDefinitions>
+        <!--sets up the first row, which is always output device-->
+        <Grid.RowDefinitions> 
+            <RowDefinition Height="30"/>
+        </Grid.RowDefinitions>
+        <!--tells user select using combobox-->
+        <Label Name="AskUserForOutput" Grid.Row="0" Grid.Column="0">Select an Output Device: </Label>
+        <!--combobox with all available outputs, setup in cs file-->
+        <ComboBox Name="OutputDeviceOutput" Grid.Column="1" Grid.Row="0" Width="450"/> 
+    </Grid>
+</Window>

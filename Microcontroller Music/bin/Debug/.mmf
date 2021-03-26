@@ -1,0 +1,39 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Song xmlns:i="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://schemas.datacontract.org/2004/07/Microcontroller_Music">
+      <BPM>120</BPM>
+      <Repeats xmlns:d2p1="http://schemas.microsoft.com/2003/10/Serialization/Arrays" />
+      <TimeSigs>
+            <Song.TimeSig>
+                  <bottom>4</bottom>
+                  <top>4</top>
+            </Song.TimeSig>
+      </TimeSigs>
+      <Title></Title>
+      <Tracks>
+            <Track>
+                  <Bars>
+                        <Bar>
+                              <KeySigIndex>0</KeySigIndex>
+                              <Length>2</Length>
+                              <MaxLength>16</MaxLength>
+                              <Notes>
+                                    <Symbol z:Id="i1" i:type="Note" xmlns:z="http://schemas.microsoft.com/2003/10/Serialization/">
+                                          <Length>2</Length>
+                                          <StartPoint>0</StartPoint>
+                                          <Accidental>0</Accidental>
+                                          <Pitch>56</Pitch>
+                                          <Staccato>false</Staccato>
+                                          <Tie i:nil="true" />
+                                          <TiedTo i:nil="true" />
+                                    </Symbol>
+                              </Notes>
+                              <multipleMelodyLines>false</multipleMelodyLines>
+                        </Bar>
+                  </Bars>
+                  <Connected>false</Connected>
+                  <Name>Treble</Name>
+                  <Treble>true</Treble>
+            </Track>
+      </Tracks>
+      <totalBars>1</totalBars>
+</Song>
