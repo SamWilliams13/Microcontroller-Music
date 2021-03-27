@@ -267,6 +267,13 @@ namespace Microcontroller_Music
                 trackDeleteMenu.Click += new RoutedEventHandler(TrackDeleteClick);
                 trackMenu.Items.Add(trackDeleteMenu);
                 #endregion
+                #region insert bar
+                MenuItem insertBarMenu = new MenuItem();
+                insertBarMenu.Header = "Insert Bar";
+                insertBarMenu.Tag = bar;
+                insertBarMenu.Click += InsertBarMenu_Click;
+                trackMenu.Items.Add(insertBarMenu);
+                #endregion
                 contextMenu.Items.Add(trackMenu);
             }
             if (bar != -1)
@@ -375,6 +382,12 @@ namespace Microcontroller_Music
             contextMenu.IsOpen = true;
         }
 
+        private void InsertBarMenu_Click(object sender, RoutedEventArgs e)
+        {
+            s.InsertBarAt(Convert.ToInt32((sender as MenuItem).Tag));
+            drawer.DrawPage(ref SheetMusic, (int)Zoom.Value);
+        }
+
         private void SelectableKeySig_Click(object sender, RoutedEventArgs e)
         {
             s.ChangeKeySig(Convert.ToInt32((sender as MenuItem).Tag), bar);
@@ -457,120 +470,6 @@ namespace Microcontroller_Music
         {
             s.DeleteNote(track, bar, noteIndex);
             drawer.DrawPage(ref SheetMusic, (int)Zoom.Value);
-        }
-
-        private string NoteToText(Note note)
-        {
-            string noteString = "";
-            int length = note.GetLength();
-            if (Math.Log(length, 2) % 1 != 0)
-            {
-                noteString += "Dotted ";
-                length = (int)(length / 1.5);
-            }
-            switch (length)
-            {
-                case 1:
-                    noteString += "Semiquaver ";
-                    break;
-                case 2:
-                    noteString += "Quaver ";
-                    break;
-                case 4:
-                    noteString += "Crotchet ";
-                    break;
-                case 8:
-                    noteString += "Minim ";
-                    break;
-                case 16:
-                    noteString += "Semibreve ";
-                    break;
-            }
-            int pitch = note.GetPitch() - note.GetAccidental();
-            int acc = note.GetAccidental();
-            int octLetter = pitch % 12;
-            switch (octLetter)
-            {
-                case 1:
-                    noteString += "A";
-                    break;
-                case 3:
-                    switch (acc)
-                    {
-                        case 1:
-                            noteString += "C";
-                            break;
-                        case 0:
-                            noteString += "B";
-                            break;
-                        case -1:
-                            noteString += "Bb";
-                            break;
-                    }
-                    break;
-                case 4:
-                    switch (acc)
-                    {
-                        case 1:
-                            noteString += "C#";
-                            break;
-                        case 0:
-                            noteString += "C";
-                            break;
-                        case -1:
-                            noteString += "B";
-                            break;
-                    }
-                    break;
-                case 6:
-                    noteString += "D";
-                    break;
-                case 8:
-                    switch (acc)
-                    {
-                        case 1:
-                            noteString += "F";
-                            break;
-                        case 0:
-                            noteString += "E";
-                            break;
-                        case -1:
-                            noteString += "Eb";
-                            break;
-                    }
-                    break;
-                case 9:
-                    switch (acc)
-                    {
-                        case 1:
-                            noteString += "F#";
-                            break;
-                        case 0:
-                            noteString += "F";
-                            break;
-                        case -1:
-                            noteString += "E";
-                            break;
-                    }
-                    break;
-                case 11:
-                    noteString += "G";
-                    break;
-            }
-            if (octLetter != 3 && octLetter != 4 && octLetter != 8 && octLetter != 9)
-            {
-                switch (note.GetAccidental())
-                {
-                    case 1:
-                        noteString += "#";
-                        break;
-                    case -1:
-                        noteString += "b";
-                        break;
-                }
-            }
-            noteString = (octLetter >= 4) ? noteString + (((pitch - octLetter) / 12) + 1) : noteString + ((pitch - octLetter) / 12);
-            return noteString;
         }
 
         private void addtrack_Click(object sender, RoutedEventArgs e)

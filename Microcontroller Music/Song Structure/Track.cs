@@ -411,6 +411,12 @@ namespace Microcontroller_Music
             Bars[Bars.Count - 2].FixSpacing(true);
         }
 
+        public void InsertBarAt(int bar)
+        {
+            Bars.Insert(bar, new Bar(Bars[Bars.Count - 1].GetMaxLength(), Bars[Bars.Count - 1].GetKeySig()));
+            Bars[bar - 1].FixSpacing(true);
+        }
+
         public void DeleteBar(int barIndex)
         {
             for (int i = 0; i < Bars[barIndex].GetNotes().Count; i++)

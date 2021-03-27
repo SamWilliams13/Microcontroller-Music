@@ -432,6 +432,17 @@ namespace Microcontroller_Music
             UpdateTotalBars();
         }
 
+        public void InsertBarAt(int bar)
+        {
+            KeySigs.Insert(bar + 1, KeySigs[bar]);
+            TimeSigs.Insert(bar + 1, TimeSigs[bar]);
+            foreach(Track t in Tracks)
+            {
+                t.InsertBarAt(bar + 1);
+            }
+            totalBars++;
+        }
+
         public bool DeleteBar(int barIndex)
         {
             if (totalBars == 1)
