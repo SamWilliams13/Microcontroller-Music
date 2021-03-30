@@ -385,11 +385,11 @@ namespace Microcontroller_Music
                             //this is used so that little extra code is needed for moving to c major.
                             //sets the name of the image so sharp or flat can become natural when needed
                             string symbolType = "";
-                            if(keySig > 0)
+                            if (keySig > 0)
                             {
                                 symbolType = "Sharp";
                             }
-                            else if(keySig < 0)
+                            else if (keySig < 0)
                             {
                                 symbolType = "Flat";
                             }
@@ -701,7 +701,7 @@ namespace Microcontroller_Music
                             drawAccidental = true;
                         }
                     }
-                    if (KeySigIndex <= (-1 * n) && (pitch - accidental) % 12 == Math.Abs((5 * n +10) % 12))
+                    if (KeySigIndex <= (-1 * n) && (pitch - accidental) % 12 == Math.Abs((5 * n + 10) % 12))
                     {
                         matchesKeySig = true;
                         if (accidental != -1)
@@ -734,14 +734,11 @@ namespace Microcontroller_Music
                 int[] startPoints = new int[endIndex - startIndex + 1];
                 int[] lengths = new int[endIndex - startIndex + 1];
                 bool[] staccatos = new bool[endIndex - startIndex + 1];
-                bool[] tiedTos = new bool[endIndex - startIndex + 1];
                 int averagePitch = 0;
                 int highestPitch = -100;
                 int lowestPitch = 100;
                 int closestPitch = 100000000;
                 bool treble = SongToDraw.GetTracks(trackIndex).GetTreble();
-                int highestIndex = 0;
-                int lowestIndex = 0;
                 for (int i = 0; i <= endIndex - startIndex; i++)
                 {
                     Note note = SongToDraw.GetTracks()[trackIndex].GetBars(barIndex).GetNotes(startIndex + i) as Note;
@@ -753,12 +750,10 @@ namespace Microcontroller_Music
                     if (highestPitch < pitches[i] || highestPitch == -100)
                     {
                         highestPitch = pitches[i];
-                        highestIndex = i;
                     }
                     if (lowestPitch > pitches[i] || lowestPitch == 100)
                     {
                         lowestPitch = pitches[i];
-                        lowestIndex = i;
                     }
                     if (Math.Abs(closestPitch) > Math.Abs(pitches[i] - 3))
                     {
@@ -780,8 +775,7 @@ namespace Microcontroller_Music
                     staccatoCircle.Height = lineGap * 0.4;
                     staccatoCircle.Width = staccatoCircle.Height;
                     Canvas.SetLeft(staccatoCircle, barStart + semiquaverwidth * startPoints[0] + semiquaverwidth / 2 - staccatoCircle.Width / 4);
-                    if (highestPitch < 3 || Math.Abs(highestPitch - 3) < Math.Abs(lowestPitch - 3) ||
-                        (lastBeamUp && (SongToDraw.GetTracks()[trackIndex].GetBars(barIndex).GetNotes(startIndex) as Note).GetTiedTo() != null))
+                    if (highestPitch < 3 || Math.Abs(highestPitch - 3) < Math.Abs(lowestPitch - 3))
                     {
                         //stem goes up - draw line on right of notes; draw line from middle of lowest to an octave from highest -- unless lowest is more than an octave from middle line (3)
                         singleLine.X1 = barStart + semiquaverwidth * startPoints[0] + noteHeadWidth + 1 + (semiquaverwidth - noteHeadWidth) / 2;
@@ -845,11 +839,7 @@ namespace Microcontroller_Music
                     }
                     double beamGradient = -1 * numerator / denominator;
                     //calculate if notes go above or below using average (and a fight between min and max notes to see if they need to go above or below - you'll see; it's gonna be great)
-                    if (tiedTos[0]) //if the first note in the beam is tied to the previous, it goes in the same direction
-                    {
-                        //nothing changes
-                    }
-                    else if (Math.Abs(highestPitch - averagePitch) > 6 ^ Math.Abs(lowestPitch - averagePitch) > 6) //another xor but we actually need to know which it is
+                    if (Math.Abs(highestPitch - averagePitch) > 6 ^ Math.Abs(lowestPitch - averagePitch) > 6) //another xor but we actually need to know which it is
                     {
                         lastBeamUp = Math.Abs(lowestPitch - averagePitch) > 6;
                     }
@@ -860,7 +850,7 @@ namespace Microcontroller_Music
                     //calculate height of beam using average distance from gradient and min (target 3.5, min 2?)
                     double beamDifference = averagePitch + averageStart * beamGradient;
                     beamDifference = (lastBeamUp) ? beamDifference + 7 : beamDifference - 7;
-                    for(int i = 0; i < startPoints.Length; i++)
+                    for (int i = 0; i < startPoints.Length; i++)
                     {
                         if (lastBeamUp && beamDifference - beamGradient * startPoints[i] - pitches[i] < 5)
                         {
@@ -947,7 +937,7 @@ namespace Microcontroller_Music
                             canvas.Children.Add(semiBeam);
                         }
                         //handles the regular case where 2 or more semiuavers are grouped
-                        else if (lengths[i] == 1 && startPoints[i + 1] != startPoints[i] && lengths[i+1] == 1)
+                        else if (lengths[i] == 1 && startPoints[i + 1] != startPoints[i] && lengths[i + 1] == 1)
                         {
                             Polygon semiBeamR = new Polygon();
                             semiBeamR.Fill = black;
@@ -966,7 +956,7 @@ namespace Microcontroller_Music
                             canvas.Children.Add(semiBeamR);
                         }
                         //handles when the note to the left isn't a semiquaver but neither is the one to the right so it has to go half to the right to 
-                        else if(!previousNoteWasSemi && lengths[i] == 1 && startPoints[i + 1] != startPoints[i] && lengths[i + 1] != 1)
+                        else if (!previousNoteWasSemi && lengths[i] == 1 && startPoints[i + 1] != startPoints[i] && lengths[i + 1] != 1)
                         {
                             Polygon semiBeamHalf = new Polygon();
                             semiBeamHalf.Fill = black;
@@ -976,11 +966,11 @@ namespace Microcontroller_Music
                             semiBeamHalf.Points.Add(new Point(stem.X1 + noteHeadWidth, semiBottomY + ((noteHeadWidth / (double)semiquaverwidth) * beamGradient) * lineGap / 2));
                             canvas.Children.Add(semiBeamHalf);
                         }
-                        if(lengths[i] == 0 && i < lengths.Length - 1 && startPoints[i+1] != startPoints[i])
+                        if (lengths[i] == 0 && i < lengths.Length - 1 && startPoints[i + 1] != startPoints[i])
                         {
                             previousNoteWasSemi = true;
                         }
-                        else if(lengths[i] != 0)
+                        else if (lengths[i] != 0)
                         {
                             previousNoteWasSemi = false;
                         }
@@ -1024,6 +1014,10 @@ namespace Microcontroller_Music
             else
             {
                 drawDot = false;
+            }
+            if (note.GetTie() != null)
+            {
+                DrawConnection(ref canvas, note, barIndex, trackIndex, barStart, lineStart);
             }
             Ellipse noteCircle = new Ellipse();
             noteCircle.Fill = black;
@@ -1130,6 +1124,64 @@ namespace Microcontroller_Music
             }
         }
 
+        private void DrawConnection(ref Canvas canvas, Note note, int bar, int track, int barStart, int lineStart)
+        {
+            Note tieNote = note.GetTie() as Note;
+            ArcSegment blackCurve = new ArcSegment();
+            PathFigure connectionPathFigure = new PathFigure();
+            PathSegmentCollection connectionPathSegmentCollection = new PathSegmentCollection();
+            PathFigureCollection connectionPathFigureCollection = new PathFigureCollection();
+            PathGeometry connectionPathGeometry = new PathGeometry();
+            Path connectionPath = new Path();
+            double noteY = lineStart - FindLineDifferenceFromMiddleC(note.GetPitch() - note.GetAccidental(), (SongToDraw.GetTracks(track).GetTreble())) * lineGap / 2;
+            double tieY = lineStart - FindLineDifferenceFromMiddleC(tieNote.GetPitch() - tieNote.GetAccidental(), (SongToDraw.GetTracks(track).GetTreble())) * lineGap / 2;
+            if (-1 * (noteY - lineStart) < 4 * lineGap / 2)
+            {
+                noteY += lineGap * 0.75;
+                tieY += lineGap * 0.75;
+                blackCurve.SweepDirection = SweepDirection.Counterclockwise;
+            }
+            else
+            {
+                noteY -= lineGap * 0.75;
+                tieY -= lineGap * 0.75;
+                blackCurve.SweepDirection = SweepDirection.Clockwise;
+            }
+            connectionPathFigure.StartPoint = new Point(barStart + (note.GetStart()) * semiquaverwidth  + semiquaverwidth / 2 + 10, noteY);
+            if (tieNote.GetStart() <= note.GetStart())
+            {
+                if (barStarts[bar] >= barStarts[bar + 1])
+                {
+                    blackCurve.Point = new Point(barStart + (SongToDraw.GetTracks(0).GetBars(bar).GetMaxLength() + 1) * semiquaverwidth - 9, (noteY + tieY) / 2);
+                }
+                else
+                {
+                    blackCurve.Point = new Point(barStarts[bar + 1] * semiquaverwidth + reservedForTrackTitles + semiquaverwidth / 2 - 9, tieY);
+                }
+            }
+            else
+            {
+                blackCurve.Point = new Point(barStart + tieNote.GetStart() * semiquaverwidth + semiquaverwidth / 2 - 9, tieY);
+            }
+            blackCurve.Size = new Size(Math.Abs(blackCurve.Point.X - connectionPathFigure.StartPoint.X), 70);
+            if (-1 * (noteY - lineStart) < 4 * lineGap / 2)
+            {
+                blackCurve.SweepDirection = SweepDirection.Counterclockwise;
+            }
+            else
+            {
+                blackCurve.SweepDirection = SweepDirection.Clockwise;
+            }
+            connectionPathSegmentCollection.Add(blackCurve);
+            connectionPathFigure.Segments = connectionPathSegmentCollection;
+            connectionPathFigureCollection.Add(connectionPathFigure);
+            connectionPathGeometry.Figures = connectionPathFigureCollection;
+            connectionPath.Stroke = black;
+            connectionPath.StrokeThickness = 3;
+            connectionPath.Data = connectionPathGeometry;
+            canvas.Children.Add(connectionPath);
+        }
+
         public void DrawRest(ref Canvas canvas, int barStart, int lineStart, int trackIndex, int barIndex, int noteIndex, double startDisplacement)
         {
             Rest rest = SongToDraw.GetTracks(trackIndex).GetBars(barIndex).GetNotes(noteIndex) as Rest;
@@ -1230,11 +1282,13 @@ namespace Microcontroller_Music
         }
         public bool WhereAmI(ref Canvas canvas, ref int trackIndex, ref int barIndex, ref int notePos, ref int pitch, int length, Point position, int zoomValue)
         {
-            int line = (int)((position.Y - extraHeight) / lineHeight);
-            if (line < 0)
+            //if statement to make sure notes can't be placed in the space at top of page, and extra linegap / 4 to make sure placement rules are consistent with
+            //the other lines.
+            if (position.Y < extraHeight + lineGap / 4)
             {
                 return false;
             }
+            int line = (int)((position.Y - extraHeight) / lineHeight);
             trackIndex = line % totalInstruments;
             int lineIndex = (line - trackIndex) / totalInstruments;
             if (lineIndex > barsPerLine.Count)
@@ -1336,7 +1390,7 @@ namespace Microcontroller_Music
             }
             else
             {
-                for(int i = 0; i < 4; i++)
+                for (int i = 0; i < 4; i++)
                 {
                     previewLines[i].Visibility = Visibility.Hidden;
                 }
@@ -1345,11 +1399,6 @@ namespace Microcontroller_Music
             Preview.RenderTransform = new RotateTransform(-20);
             Preview.Visibility = Visibility.Visible;
             return true;
-        }
-
-        public void removePreview()
-        {
-            Preview.Visibility = Visibility.Hidden;
         }
 
         public int ReverseFindLineDifferenceFromMiddleC(double lineDiff, bool treble)

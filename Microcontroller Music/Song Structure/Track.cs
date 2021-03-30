@@ -27,8 +27,6 @@ namespace Microcontroller_Music
         private int tempCheck;
         [DataMember]
         private bool Treble;
-        [DataMember]
-        private bool Connected;
 
         public Track(string name, int keysig, int timesig, bool treble)
         {

@@ -35,7 +35,6 @@ namespace Microcontroller_Music
         private int pitch = -1;
         private int noteIndex = -1;
         private int noteLength = 2;
-        private bool isSelectingConnection = false;
         static Label statusLabel = new Label();
         private ContextMenu contextMenu = new ContextMenu();
         //makes a new window at launch
@@ -152,6 +151,10 @@ namespace Microcontroller_Music
             {
                 writer.Stop();
             }
+            if(GenerateYesNoDialog("Closing App", "Would you like to save?"))
+            {
+                saveFile();
+            }
         }
         private void SheetMusic_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
@@ -189,6 +192,10 @@ namespace Microcontroller_Music
 
         private void createNewFile(object sender, RoutedEventArgs e)
         {
+            if (GenerateYesNoDialog("Closing App", "Would you like to save?"))
+            {
+                saveFile();
+            }
             if (Play_Button.Content.ToString() == "Stop")
             {
                 writer.Stop();
@@ -207,6 +214,10 @@ namespace Microcontroller_Music
 
         private void openExistingFile(object sender, RoutedEventArgs e)
         {
+            if (GenerateYesNoDialog("Closing App", "Would you like to save?"))
+            {
+                saveFile();
+            }
             OpenFileDialog fileOpen = new OpenFileDialog();
             fileOpen.Filter = "Microcontroller Music Files (*.mmf)|*.mmf";
             if (fileOpen.ShowDialog() == true)
@@ -216,11 +227,24 @@ namespace Microcontroller_Music
             }
         }
 
+        //event handler for the save button
+        //actual process removed so it can be called at other points in program.
         private void saveCurrentFile(object sender, RoutedEventArgs e)
+        {
+            saveFile();
+        }
+
+        //event handler for the save as button
+        private void saveCurrentFileAs(object sender, RoutedEventArgs e)
+        {
+            saveInNewFilePath();
+        }
+
+        private void saveFile()
         {
             if (filePath == "")
             {
-                saveCurrentFileAs(sender, e);
+                saveInNewFilePath();
             }
             else
             {
@@ -228,7 +252,7 @@ namespace Microcontroller_Music
             }
         }
 
-        private void saveCurrentFileAs(object sender, RoutedEventArgs e)
+        private void saveInNewFilePath()
         {
             SaveFileDialog saveFile = new SaveFileDialog();
             saveFile.Filter = "Microcontroller Music Files (*.mmf)|*.mmf";
@@ -415,6 +439,7 @@ namespace Microcontroller_Music
             {
                 s.CreateConnection(track, bar, noteIndex, producer.Tag as Symbol, true);
             }
+            drawer.DrawPage(ref SheetMusic, (int)Zoom.Value);
         }
 
         private void TrackDeleteClick(object sender, RoutedEventArgs e)
