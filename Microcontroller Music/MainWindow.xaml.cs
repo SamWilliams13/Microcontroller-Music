@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -65,6 +65,50 @@ namespace Microcontroller_Music
             filePath = filename;
 
         }
+        public void ExportBitmap(string filename)
+        {
+            FileStream fileStream = new FileStream(filename, FileMode.Create);
+            RenderTargetBitmap renderTargetBitmap = new RenderTargetBitmap((int)SheetMusic.Width, (int)SheetMusic.Height, 1 / 96, 1 / 96, PixelFormats.Pbgra32);
+            BitmapEncoder bitmapEncoder = new TiffBitmapEncoder();
+            renderTargetBitmap.Render(SheetMusic);
+            bitmapEncoder.Frames.Add(BitmapFrame.Create(renderTargetBitmap));
+            bitmapEncoder.Save(fileStream);
+            fileStream.Close();
+            //uses the ratio of width to height to decide if the page should be split.
+            int pageHeight = drawer.GetPageHeight(SheetMusic);
+            if (pageHeight < bitmapEncoder.Frames[0].Height)
+            {
+                int numberOfPages = (int)Math.Ceiling(bitmapEncoder.Frames[0].Height / (double)pageHeight);
+                for(int i = 0; i < numberOfPages; i++)
+                {
+                    FileStream pageStream = new FileStream(filename.Substring(0, filename.Length - 4) + "_" + (i + 1) + ".bmp", FileMode.Create);
+                    int startY;
+                    int yHeight;
+                    int titleHeight = drawer.GetTitleHeight(ref SheetMusic);
+                    if (i == 0)
+                    {
+                        startY = 0;
+                        yHeight = titleHeight + pageHeight;
+                    }
+                    else if(i == numberOfPages - 1)
+                    {
+                        startY = i * pageHeight + titleHeight;
+                        yHeight = (int)(bitmapEncoder.Frames[0].Height - titleHeight) % pageHeight;
+                    }
+                    else
+                    {
+                        startY = i * pageHeight + titleHeight;
+                        yHeight = pageHeight;
+                    }
+                    CroppedBitmap croppedBitmap = new CroppedBitmap((BitmapSource) new BitmapImage(new Uri(filename)), new Int32Rect(0, startY, 8000, yHeight));
+                    BitmapEncoder pageEncoder = new TiffBitmapEncoder();
+                    pageEncoder.Frames.Add(BitmapFrame.Create(croppedBitmap));
+                    pageEncoder.Save(pageStream);
+                    pageStream.Close();
+                }
+            }
+            drawer.Zoom(SheetMusic, (int)Zoom.Value);
+        }
 
         //makes a song out of a file
         public void OpenFile(string FilePath)
@@ -123,7 +167,7 @@ namespace Microcontroller_Music
         {
             if (SheetMusic.IsLoaded)
             {
-                drawer.Zoom(ref SheetMusic, (int)Zoom.Value);
+                drawer.Zoom(SheetMusic, (int)Zoom.Value);
             }
         }
 
@@ -171,9 +215,6 @@ namespace Microcontroller_Music
                         s.AddNote(track, bar, new Note(noteLength, semipos, pitch));
                         drawer.DrawPage(ref SheetMusic, (int)Zoom.Value);
                     }
-                    else
-                    {
-                    }
                 }
             }
         }
@@ -192,7 +233,7 @@ namespace Microcontroller_Music
 
         private void createNewFile(object sender, RoutedEventArgs e)
         {
-            if (GenerateYesNoDialog("Closing App", "Would you like to save?"))
+            if (GenerateYesNoDialog("Closing File", "Would you like to save?"))
             {
                 saveFile();
             }
@@ -214,7 +255,7 @@ namespace Microcontroller_Music
 
         private void openExistingFile(object sender, RoutedEventArgs e)
         {
-            if (GenerateYesNoDialog("Closing App", "Would you like to save?"))
+            if (GenerateYesNoDialog("Closing File", "Would you like to save?"))
             {
                 saveFile();
             }
@@ -256,7 +297,6 @@ namespace Microcontroller_Music
         {
             SaveFileDialog saveFile = new SaveFileDialog();
             saveFile.Filter = "Microcontroller Music Files (*.mmf)|*.mmf";
-            Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
             if (saveFile.ShowDialog() == true)
             {
                 WriteFile(s, saveFile.FileName);
@@ -546,7 +586,7 @@ namespace Microcontroller_Music
         {
             if (sender != null)
             {
-                switch ((sender as RadioButton).Content.ToString())
+                switch ((sender as RadioButton).Tag.ToString())
                 {
                     case "Semiquaver":
                         noteLength = 1;
@@ -573,6 +613,19 @@ namespace Microcontroller_Music
                         noteLength = 12;
                         break;
                 }
+            }
+        }
+
+        private void bitmapExport_Click(object sender, RoutedEventArgs e)
+        {
+            drawer.MakePreviewInvisible();
+            SaveFileDialog saveFile = new SaveFileDialog();
+            saveFile.Filter = "Bitmap Image (*.bmp)|*.bmp";
+            if (saveFile.ShowDialog() == true)
+            {
+                Action<string> bmp = ExportBitmap;
+                drawer.Zoom(SheetMusic, 8000);
+                this.Dispatcher.Invoke(bmp, System.Windows.Threading.DispatcherPriority.Loaded, saveFile.FileName);
             }
         }
     }

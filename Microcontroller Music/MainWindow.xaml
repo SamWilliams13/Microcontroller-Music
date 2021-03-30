@@ -24,10 +24,10 @@
             <!--<left - the main section/-->
             <ColumnDefinition x:Name="ScrollWidth"/>
             <!--<toolbar side/-->
-            <ColumnDefinition x:Name="ToolbarWidth" Width="100"/> 
+            <ColumnDefinition x:Name="ToolbarWidth" Width="80"/> 
         </Grid.ColumnDefinitions>
         <!--<this is where the canvas goes so you can scroll/-->
-        <ScrollViewer  Grid.Row="1" x:Name="MainScroll" HorizontalAlignment="Stretch" VerticalAlignment="Top" HorizontalScrollBarVisibility="Auto" >
+        <ScrollViewer  Grid.Row="1" x:Name="MainScroll" HorizontalAlignment="Stretch" VerticalAlignment="Top" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" >
             <!--<test image for when the canvas fails for whatever reason<Image Source="D:\Libraries\Pictures\tbshs.png"/>/-->
                 <!--<this is where the sheet music is drawn and interacted with/-->
             <Canvas x:Name="SheetMusic" 
@@ -39,7 +39,7 @@
                     PreviewMouseRightButtonDown="SheetMusic_PreviewMouseRightButtonDown">
             </Canvas>
         </ScrollViewer>
-        <StatusBar Grid.Row="2" x:Name="statusBar" HorizontalAlignment="Stretch" VerticalAlignment="Bottom">
+        <StatusBar Grid.Row="2" x:Name="statusBar" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Grid.ColumnSpan="2">
             <StatusBarItem x:Name="statusItem">
             </StatusBarItem>
         </StatusBar>
@@ -52,6 +52,7 @@
                 <Separator/>
                 <MenuItem Header="_Save..." Click="saveCurrentFile"/>
                 <MenuItem Header="_Save As..." Click="saveCurrentFileAs"/>
+                <MenuItem Header="Export as Bitmap..." Click="bitmapExport_Click"/>
             </MenuItem>
             <MenuItem Header="_Song">
                 <MenuItem x:Name="addtrack" Header="Add Track" Click="addtrack_Click"/>
@@ -62,16 +63,33 @@
             <Button x:Name="Play_Button" Content="Play" Click="Play_Button_Click"/>
         </Menu>
         <!--<this is the toolbar. it has buttons for all the types of notes./-->
-        <StackPanel x:Name="ToolBox" Grid.Column="1" Grid.Row="1" Grid.RowSpan="2">
-
-            <RadioButton GroupName="NoteType" Checked="RadioButton_Checked" Content="Semiquaver"></RadioButton>
-            <RadioButton GroupName="NoteType" Checked="RadioButton_Checked" Content="Quaver" IsChecked="True"></RadioButton>
-            <RadioButton GroupName="NoteType"  Checked="RadioButton_Checked" Content="Crotchet"></RadioButton>
-            <RadioButton GroupName="NoteType"  Checked="RadioButton_Checked" Content="Minim"></RadioButton>
-            <RadioButton GroupName="NoteType"  Checked="RadioButton_Checked" Content="Semibreve"></RadioButton>
-            <RadioButton GroupName="NoteType"  Checked="RadioButton_Checked" Content="Dotted Quaver"></RadioButton>
-            <RadioButton GroupName="NoteType"  Checked="RadioButton_Checked" Content="Dotted Crotchet"></RadioButton>
-            <RadioButton GroupName="NoteType"  Checked="RadioButton_Checked" Content="Dotted Minim"></RadioButton>
-        </StackPanel>
+        <ScrollViewer x:Name="toolboxScroll" Grid.Column="1" Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel x:Name="ToolBox" Grid.Column="1" Grid.Row="1" Grid.RowSpan="2">
+                <RadioButton GroupName="NoteType" Style="{StaticResource {x:Type ToggleButton}}" Checked="RadioButton_Checked" Tag="Semiquaver">
+                    <Image Source="pack://siteoforigin:,,,/source/semiquaver note.png" Stretch="Uniform"/>
+                </RadioButton>
+                <RadioButton GroupName="NoteType" Style="{StaticResource {x:Type ToggleButton}}" Checked="RadioButton_Checked" Tag="Quaver" IsChecked="True">
+                    <Image Source="pack://siteoforigin:,,,/source/quaver note.png" Stretch="Uniform"/>
+                </RadioButton>
+                <RadioButton GroupName="NoteType" Style="{StaticResource {x:Type ToggleButton}}"  Checked="RadioButton_Checked" Tag="Crotchet">
+                    <Image Source="pack://siteoforigin:,,,/source/crotchet note.png" Stretch="Uniform"/>
+                </RadioButton>
+                <RadioButton GroupName="NoteType" Style="{StaticResource {x:Type ToggleButton}}"  Checked="RadioButton_Checked" Tag="Minim">
+                    <Image Source="pack://siteoforigin:,,,/source/minim note.png" Stretch="Uniform"/>
+                </RadioButton>
+                <RadioButton GroupName="NoteType"  Style="{StaticResource {x:Type ToggleButton}}" Checked="RadioButton_Checked" Tag="Semibreve">
+                    <Image Source="pack://siteoforigin:,,,/source/semibreve note.png" Stretch="Uniform"/>
+                </RadioButton>
+                <RadioButton GroupName="NoteType" Style="{StaticResource {x:Type ToggleButton}}" Checked="RadioButton_Checked" Tag="Dotted Quaver">
+                    <Image Source="pack://siteoforigin:,,,/source/dotted quaver.png" Stretch="Uniform"/>
+                </RadioButton>
+                <RadioButton GroupName="NoteType" Style="{StaticResource {x:Type ToggleButton}}" Checked="RadioButton_Checked" Tag="Dotted Crotchet">
+                    <Image Source="pack://siteoforigin:,,,/source/dotted crotchet.png" Stretch="Uniform"/>
+                </RadioButton>
+                <RadioButton GroupName="NoteType" Style="{StaticResource {x:Type ToggleButton}}" Checked="RadioButton_Checked" Tag="Dotted Minim">
+                    <Image Source="pack://siteoforigin:,,,/source/dotted minim.png" Stretch="Uniform"/>
+                </RadioButton>
+            </StackPanel>
+        </ScrollViewer>
     </Grid>
 </Window>

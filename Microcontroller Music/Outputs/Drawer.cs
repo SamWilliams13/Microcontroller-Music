@@ -249,7 +249,7 @@ namespace Microcontroller_Music
                 canvas.Children.Add(previewLines[i]);
             }
             //call the scaling function so the amount of zoom is maintained when drawing the page again.
-            Zoom(ref canvas, zoomValue);
+            Zoom(canvas, zoomValue);
             #endregion
             #region draw and populate bars
             //AddTitle is used here to draw the title at the top of the page
@@ -852,21 +852,21 @@ namespace Microcontroller_Music
                     beamDifference = (lastBeamUp) ? beamDifference + 7 : beamDifference - 7;
                     for (int i = 0; i < startPoints.Length; i++)
                     {
-                        if (lastBeamUp && beamDifference - beamGradient * startPoints[i] - pitches[i] < 5)
+                        if (lastBeamUp && beamDifference - beamGradient * startPoints[i] - pitches[i] < 6)
                         {
-                            beamDifference = pitches[i] + 5 + startPoints[i] * beamGradient;
+                            beamDifference = pitches[i] + 6 + startPoints[i] * beamGradient;
                         }
-                        else if (!lastBeamUp && pitches[i] - (beamDifference - beamGradient * startPoints[i]) < 5)
+                        else if (!lastBeamUp && pitches[i] - (beamDifference - beamGradient * startPoints[i]) < 6)
                         {
-                            beamDifference = pitches[i] - 5 + startPoints[i] * beamGradient;
+                            beamDifference = pitches[i] - 6 + startPoints[i] * beamGradient;
                         }
                     }
                     //beamDifference = defaultbeamStart;
                     //draw the lines
                     Polygon beam = new Polygon();
                     beam.Fill = black;
-                    Point p1 = new Point();
-                    Point p2 = new Point();
+                    Point p1;
+                    Point p2; 
                     int lineStartFromSemiStart;
                     int beamUpAdjustment = 0;
                     if (lastBeamUp)
@@ -1243,10 +1243,9 @@ namespace Microcontroller_Music
         #endregion
 
         #region scaling
-        public void Zoom(ref Canvas canvas, int chosenWidth)
+        public void Zoom(Canvas canvas, int chosenWidth)
         {
             canvas.Width = chosenWidth;
-            //height doesn't work but not a problem like width is
             double newHeight = ((double)chosenWidth / canvasWidth) * canvasHeight;
             canvas.Height = newHeight;
             canvas.RenderTransform = new ScaleTransform((double)chosenWidth / canvasWidth, (double)chosenWidth / canvasWidth);
@@ -1401,6 +1400,15 @@ namespace Microcontroller_Music
             return true;
         }
 
+        public void MakePreviewInvisible()
+        {
+            foreach(Line line in previewLines)
+            {
+                line.Visibility = Visibility.Hidden;
+            }
+            Preview.Visibility = Visibility.Hidden;
+        }
+
         public int ReverseFindLineDifferenceFromMiddleC(double lineDiff, bool treble)
         {
             lineDiff = (treble) ? -2 * lineDiff / lineGap + 3 : -2 * lineDiff / lineGap - 9;
@@ -1415,6 +1423,22 @@ namespace Microcontroller_Music
                 mod12 -= 12;
             }
             return (int)((lineDiff - (lineDiff % 7)) / 7) * 12 + mod12 + 40;
+        }
+
+        public int GetTitleHeight(ref Canvas canvas)
+        {
+            return (int)(extraHeight * canvas.Width / canvasWidth);
+        }
+        public int GetPageHeight(Canvas canvas)
+        {
+            if(totalLines * totalInstruments < 15)
+            {
+                return (int)canvas.Height;
+            }
+            else
+            {
+                return (int)(Math.Floor((double)15 / totalInstruments) * totalInstruments * lineHeight / canvasWidth * canvas.Width);
+            }
         }
         #endregion
     }
