@@ -11,18 +11,24 @@ namespace Microcontroller_Music
     public class Song
     {
         [DataMember]
+        //stores the name of the song
         private string Title;
         [DataMember]
+        //stores the crotchets per minute of the song
         private int BPM;
         [DataMember]
-        private List<int> KeySigs;
+        //a list of the key sig of each bar - consistent for all tracks
+        private readonly List<int> KeySigs;
         [DataMember]
-        private List<Track> Tracks;
+        //list of all tracks in song
+        private readonly List<Track> Tracks;
         [DataMember]
         //0 = start, 1=end, 2=number of repeats
-        private List<int[]> Repeats = new List<int[]>();
+        private readonly List<int[]> Repeats = new List<int[]>();
         [DataMember]
+        //number of bars that should be present 
         private int totalBars = 0;
+        //struct to allow simpler representation of time sigs.
         public struct TimeSig
         {
             public int top;
@@ -34,60 +40,59 @@ namespace Microcontroller_Music
             }
         }
         [DataMember]
-        private List<TimeSig> TimeSigs;
+        //list of the time signature of each bar, consistent across tracks.
+        private readonly List<TimeSig> TimeSigs;
+
+        //constructor. sets all starting values and properties of the first bar.
         public Song(string title, int bpm, int keySig, int topp = 4, int bot = 4)
         {
             Title = title;
             BPM = bpm;
             Tracks = new List<Track>();
-            TimeSigs = new List<TimeSig>();
-            TimeSigs.Add(new TimeSig() { bottom = bot, top = topp });
-            KeySigs = new List<int>();
-            KeySigs.Add(keySig);
-        }
-
-        public int GetTotalLength()
-        {
-            int total = 0;
-            foreach (TimeSig t in TimeSigs)
+            TimeSigs = new List<TimeSig>
             {
-                total += t.top * (16 / t.bottom);
-            }
-            return total;
+                new TimeSig() { bottom = bot, top = topp }
+            };
+            KeySigs = new List<int>
+            {
+                keySig
+            };
         }
 
+        //returns the number of bars in the song
         public int GetTotalBars()
         {
             return totalBars;
         }
 
+        //returns the key signature of a given bar
         public int GetKeySigs(int index)
         {
             return KeySigs[index];
         }
 
-        public List<TimeSig> GetTimeSigs()
-        {
-            return TimeSigs;
-        }
-
+        //returns the time signature of a given bar
         public TimeSig GetTimeSigs(int index)
         {
             return TimeSigs[index];
         }
 
+        //checks the time sig of a given bar, and the bar before it.
         public bool TimeSigIsDifferentToPrevious(int barIndex)
         {
             if (barIndex > 0 && barIndex < TimeSigs.Count)
             {
+                //return true if the time signatures are different
                 return (TimeSigs[barIndex].top != TimeSigs[barIndex - 1].top || TimeSigs[barIndex].bottom != TimeSigs[barIndex - 1].bottom);
             }
             else
             {
+                //return false if the time sig is the same between the bars.
                 return false;
             }
         }
 
+        //calculates and returns the required length of a given bar in semiquavers.
         public int GetSigLength(int barIndex)
         {
             return TimeSigs[barIndex].top * (16 / TimeSigs[barIndex].bottom);
@@ -95,10 +100,13 @@ namespace Microcontroller_Music
 
 
         #region repeats
+        //Makes an array of the parameters, adds them to the list of repeats and sorts it to fit the way it is handled in MIDIWriter.
         public void AddRepeat(int bar1, int bar2, int noRepeats = 1)
         {
+            //makes sure that the repeat makes sense
             if (noRepeats > 0 && bar2 != bar1)
             {
+                //makes sure bar1 is the start of the repeat.
                 if (bar1 > bar2)
                 {
                     int temp = bar1;
@@ -107,20 +115,29 @@ namespace Microcontroller_Music
                 }
 
             }
+            //makes all the bars consistent before adding a repeat so repeats cannot be added to bars that are not complete.
             UpdateTotalBars();
             int[] newRepeat = { bar1, bar2, noRepeats };
             Repeats.Add(newRepeat);
             Repeats.Sort();
         }
 
-        public void UpdateTotalBars() //makes sure that all tracks have the same number of bars. important for repeats and adding notes
+        //makes sure that all tracks have the same number of bars. important for repeats and adding notes.
+        public void UpdateTotalBars()
         {
-            bool somethingChanged = false;
+            //boolean that means that the method loops until there is a run where nothing changes.
+            //this is because a change in the method requires the bars to be updated again.
+            bool somethingChanged;
             do
             {
                 somethingChanged = false;
+                //loop through each track
                 foreach (Track t in Tracks)
                 {
+                    //if the track has more bars than the song thinks there are
+                    //update total bars
+                    //update timesigs
+                    //update keysigs
                     if (t.GetBars().Count > totalBars)
                     {
                         somethingChanged = true;
@@ -143,6 +160,8 @@ namespace Microcontroller_Music
                             KeySigs.Add(newKeySig);
                         }
                     }
+                    //if there are less bars in the track than the song thinks there should be
+                    //add bars until it is the right length
                     else if (t.GetBars().Count < totalBars)
                     {
                         somethingChanged = true;
@@ -151,15 +170,19 @@ namespace Microcontroller_Music
                             t.NewBar();
                         }
                     }
+                    //if nothing has changed yet - this is so all tracks are the right length when you get here
                     if (!somethingChanged)
                     {
+                        //loop through all the bars in the track
                         for (int i = 0; i < totalBars; i++)
                         {
+                            //if the key signature is not as expected, change the keysig of the bar to reflect the list in song
                             if (KeySigs[i] != t.GetBars(i).GetKeySig())
                             {
                                 t.ChangeKeySig(KeySigs[i], i);
                                 somethingChanged = true;
                             }
+                            //if the length of the bar does not reflect the timesig, update the length of the timesig so it does.
                             if (GetSigLength(i) != t.GetBars(i).GetMaxLength())
                             {
                                 t.ChangeTimeSig(i, GetSigLength(i));
@@ -168,9 +191,11 @@ namespace Microcontroller_Music
                         }
                     }
                 }
+                //loop until nothing changes
             } while (somethingChanged);
         }
 
+        //finds every repeat that starts at the given bar index and removes them from the list.
         public void RemoveRepeat(int bar1)
         {
             foreach (int[] repeat in Repeats)
@@ -182,50 +207,71 @@ namespace Microcontroller_Music
             }
         }
 
+        //returns the list of repeats
         public List<int[]> GetRepeats()
         {
             return Repeats;
         }
 
+        //returns the bpm
         public int GetBPM()
         {
             return BPM;
         }
 
+        //changes the bpm
         public void SetBPM(int newBPM)
         {
             BPM = newBPM;
         }
 
+        //returns the title of the song
         public string GetTitle()
         {
             return Title;
         }
 
+        //changes the title of the song
         public void SetTitle(string title)
         {
             Title = title;
         }
         #endregion
         #region accessing tracks
+        //returns the track at the given index
         public Track GetTracks(int track)
         {
-            if(CheckTrack(track))
+            //if the track exists
+            if (CheckTrack(track))
             {
                 return Tracks[track];
             }
+            //give an error if the track doesn't exist
             else
             {
                 MainWindow.GenerateErrorDialog("invalid operation", "the requested track does not exist");
                 return null;
             }
         }
-        
-        public List<Track> GetTracks()
+
+        //returns the name of the track if the track exists
+        //otherwise returns an empty string
+        public string GetTrackTitle(int track)
         {
-            return Tracks;
+            if (CheckTrack(track))
+            {
+                return Tracks[track].GetName();
+            }
+            else return "";
         }
 
+        //returns the number of tracks in the song
+        public int GetTrackCount()
+        {
+            return Tracks.Count;
+        }
+
+        //adds a note to a given bar in a given track if the track exists, and updates the bars as required
         public void AddNote(int track, int bar, Symbol n)
         {
             if (CheckTrack(track))
@@ -235,8 +281,10 @@ namespace Microcontroller_Music
             UpdateTotalBars();
         }
 
+        //adds a new track to the song given all the necessary information
         public void NewTrack(string name, int keysig, int top, int bottom, bool treble)
         {
+            //there is a limit of 12 tracks to prevent confusion and some issues with pages.
             if (Tracks.Count < 12)
             {
                 Tracks.Add(new Track(name, keysig, top * (16 / bottom), treble));
@@ -245,22 +293,30 @@ namespace Microcontroller_Music
             {
                 MainWindow.GenerateErrorDialog("Invalid Operation", "The program has a limit of 12 tracks.");
             }
+            //updates the bars as needed
+            UpdateTotalBars();
 
-                UpdateTotalBars();
-            
         }
 
+        //removes a track from the list at the given index
+        //returns a boolean to say if the operation failed
         public bool DeleteTrack(int track)
         {
+            //if there would be no tracks left when this one is deleted then
+            //it must return false so that the new track window can be opened and the process can start again
+            //if there are no tracks then drawer will throw an error.
             if (Tracks.Count == 1)
             {
                 return false;
             }
+            //if there is a track at the index
             else if (CheckTrack(track))
             {
+                //then remove it - success.
                 Tracks.RemoveAt(track);
                 return true;
             }
+            //otherwise say it worked anyway becuase there was already nothing at the index.
             else
             {
                 return true;
@@ -268,38 +324,22 @@ namespace Microcontroller_Music
         }
         #endregion
         #region carry over from subs
+
+        //calls findnote on the given track, passing all necessary arguments.
         public int FindNote(int track, int bar, int pitch, int startpoint)
         {
             if (CheckTrack(track))
             {
                 return Tracks[track].FindNote(bar, pitch, startpoint);
             }
+            //if that track doesn't exist, say the process failed.
             else
             {
                 return -1;
             }
         }
 
-        public int FindNote(int track, int bar, Symbol n)
-        {
-            if (CheckTrack(track))
-            {
-                return Tracks[track].FindNote(bar, n);
-            }
-            else
-            {
-                return -1;
-            }
-        }
-
-        public void DeleteNote(int track, int bar, Symbol n)
-        {
-            if (CheckTrack(track))
-            {
-                Tracks[track].DeleteNote(bar, n);
-            }
-        }
-
+        //calls delete note on a given track if it exists
         public void DeleteNote(int track, int bar, int noteIndex)
         {
             if (CheckTrack(track))
@@ -308,13 +348,7 @@ namespace Microcontroller_Music
             }
         }
 
-        public void ChangeTimeSig(int track, int bar, int timeSig)
-        {
-            if (CheckTrack(track))
-            {
-                Tracks[track].ChangeTimeSig(bar, timeSig);
-            }
-        }
+        //calls togglestaccato on a given track if it exists
         public void ToggleStaccato(int track, int bar, int noteIndex)
         {
             if (CheckTrack(track))
@@ -323,14 +357,7 @@ namespace Microcontroller_Music
             }
         }
 
-        public void ToggleRest(int track, int bar, int noteIndex)
-        {
-            if (CheckTrack(track))
-            {
-                Tracks[track].ToggleRest(bar, noteIndex);
-            }
-        }
-
+        //calls create connection on a given track if it exists
         public void CreateConnection(int track, int bar, int noteIndex, Symbol TieTo, bool mode)
         {
             if (CheckTrack(track))
@@ -339,6 +366,7 @@ namespace Microcontroller_Music
             }
         }
 
+        //calls remove connection on a given track if it exists
         public void RemoveConnection(int track, int barIndex, int noteIndex, bool mode)
         {
             if (CheckTrack(track))
@@ -347,6 +375,8 @@ namespace Microcontroller_Music
             }
         }
 
+        //calls getnotestotie on a given track if it exists
+        //this is so the list of available connections to make can be displayed
         public List<Symbol> GetNotesToTie(int track, int barIndex, int noteIndex)
         {
             if (CheckTrack(track))
@@ -359,59 +389,42 @@ namespace Microcontroller_Music
             }
         }
 
+        //calls changeaccidental on a given track if it exists
         public void ChangeAccidental(int track, int barIndex, int noteIndex, int newAccidental)
         {
-            if(CheckTrack(track))
+            if (CheckTrack(track))
             {
                 Tracks[track].ChangeAccidental(barIndex, noteIndex, newAccidental);
             }
         }
 
-        public void ChangePitch(int track, int barIndex, int noteIndex, int newPitch)
-        {
-            if(CheckTrack(track))
-            {
-                Tracks[track].ChangePitch(barIndex, noteIndex, newPitch);
-            }
-        }
-
+        //changes the value in the keysig list at the given index
+        //and changes the keysig at the same bar for each track to reflect this change.
         public void ChangeKeySig(int newSig, int bar)
         {
             KeySigs[bar] = newSig;
-            foreach(Track t in Tracks)
+            foreach (Track t in Tracks)
             {
                 t.ChangeKeySig(newSig, bar);
             }
         }
 
-        public void ChangeStartPoint(int track, int barIndex, int noteIndex, int newStart)
-        {
-            if(CheckTrack(track))
-            {
-                Tracks[track].ChangeStartPoint(barIndex, noteIndex, newStart);
-            }
-        }
-
-        public void ChangeNoteLength(int track, int barIndex, int noteIndex, int newLength)
-        {
-            if(CheckTrack(track))
-            {
-                Tracks[track].ChangeNoteLength(barIndex, noteIndex, newLength);
-            }
-        }
-
+        //changes the time signature in the list at the given barIndex
+        //changes the time sig at the bar index in each track to reflect this change
         public void ChangeBarLength(int barIndex, int top, int bottom)
         {
             TimeSigs[barIndex] = new TimeSig(top, bottom);
-            foreach(Track t in Tracks)
+            foreach (Track t in Tracks)
             {
                 t.ChangeBarLength(barIndex, GetSigLength(barIndex));
             }
         }
 
+        //checks if the index value of track is within the allowed range.
+        //if not pass an error to the status bar.
         public bool CheckTrack(int track)
         {
-            if (track < Tracks.Count)
+            if (track < Tracks.Count && track >= 0)
             {
                 return true;
             }
@@ -422,12 +435,15 @@ namespace Microcontroller_Music
             }
         }
 
+        //add a bar to the given track if the track exists
+        //
         public void NewBar(int track)
         {
-            if(CheckTrack(track))
+            if (CheckTrack(track))
             {
                 Tracks[track].NewBar();
             }
+            //then update 
             KeySigs.Add(KeySigs[KeySigs.Count - 1]);
             UpdateTotalBars();
         }
@@ -436,7 +452,7 @@ namespace Microcontroller_Music
         {
             KeySigs.Insert(bar + 1, KeySigs[bar]);
             TimeSigs.Insert(bar + 1, TimeSigs[bar]);
-            foreach(Track t in Tracks)
+            foreach (Track t in Tracks)
             {
                 t.InsertBarAt(bar + 1);
             }
@@ -462,7 +478,6 @@ namespace Microcontroller_Music
                 return true;
             }
         }
-
         #endregion
     }
 }

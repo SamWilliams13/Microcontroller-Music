@@ -47,23 +47,23 @@
         <!--<this is where the Top bar is defined for controls/-->
         <Menu x:Name="TopBar" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2">
             <MenuItem Header="_File">
-                <MenuItem Header="_New..." Click="createNewFile"/>
-                <MenuItem Header="_Open..." Click="openExistingFile"/>
+                <MenuItem Header="_New..." Click="CreateNewFile"/>
+                <MenuItem Header="_Open..." Click="OpenExistingFile"/>
                 <Separator/>
-                <MenuItem Header="_Save..." Click="saveCurrentFile"/>
-                <MenuItem Header="_Save As..." Click="saveCurrentFileAs"/>
-                <MenuItem Header="Export as Bitmap..." Click="bitmapExport_Click"/>
+                <MenuItem Header="_Save..." Click="SaveCurrentFile"/>
+                <MenuItem Header="_Save As..." Click="SaveCurrentFileAs"/>
+                <MenuItem Header="Export as Bitmap..." Click="BitmapExport_Click"/>
             </MenuItem>
             <MenuItem Header="_Song">
-                <MenuItem x:Name="addtrack" Header="Add Track" Click="addtrack_Click"/>
-                <MenuItem x:Name ="bpm" Header="BPM: 120" Click="bpm_Click"/>
-                <MenuItem x:Name="changetitle"  Header="Change Title" Click="changetitle_Click"/>
+                <MenuItem x:Name="AddTrack" Header="Add Track" Click="AddTrack_Click"/>
+                <MenuItem x:Name ="Bpm" Header="BPM: 120" Click="Bpm_Click"/>
+                <MenuItem x:Name="ChangeTitle"  Header="Change Title" Click="ChangeTitle_Click"/>
             </MenuItem>
             <Slider x:Name="Zoom" Orientation="Horizontal" Value="1800" Maximum="3600" Minimum="100" ValueChanged="Zoom_ValueChanged" Width="100"/>
             <Button x:Name="Play_Button" Content="Play" Click="Play_Button_Click"/>
         </Menu>
         <!--<this is the toolbar. it has buttons for all the types of notes./-->
-        <ScrollViewer x:Name="toolboxScroll" Grid.Column="1" Grid.Row="1" VerticalScrollBarVisibility="Auto">
+        <ScrollViewer x:Name="ToolBoxScroll" Grid.Column="1" Grid.Row="1" VerticalScrollBarVisibility="Auto">
             <StackPanel x:Name="ToolBox" Grid.Column="1" Grid.Row="1" Grid.RowSpan="2">
                 <RadioButton GroupName="NoteType" Style="{StaticResource {x:Type ToggleButton}}" Checked="RadioButton_Checked" Tag="Semiquaver">
                     <Image Source="pack://siteoforigin:,,,/source/semiquaver note.png" Stretch="Uniform"/>

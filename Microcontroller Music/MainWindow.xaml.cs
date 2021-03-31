@@ -36,7 +36,9 @@ namespace Microcontroller_Music
         private int noteIndex = -1;
         private int noteLength = 2;
         static Label statusLabel = new Label();
+#pragma warning disable IDE0044 // Add readonly modifier
         private ContextMenu contextMenu = new ContextMenu();
+#pragma warning restore IDE0044 // Add readonly modifier
         //makes a new window at launch
         public MainWindow()
         {
@@ -65,6 +67,7 @@ namespace Microcontroller_Music
             filePath = filename;
 
         }
+
         public void ExportBitmap(string filename)
         {
             FileStream fileStream = new FileStream(filename, FileMode.Create);
@@ -79,9 +82,13 @@ namespace Microcontroller_Music
             if (pageHeight < bitmapEncoder.Frames[0].Height)
             {
                 int numberOfPages = (int)Math.Ceiling(bitmapEncoder.Frames[0].Height / (double)pageHeight);
-                for(int i = 0; i < numberOfPages; i++)
+                for (int i = 0; i < numberOfPages; i++)
                 {
-                    FileStream pageStream = new FileStream(filename.Substring(0, filename.Length - 4) + "_" + (i + 1) + ".bmp", FileMode.Create);
+                    string theName = filename.Split('\\').Last();
+                    string croppedFilename = filename.Substring(0, filename.Length - theName.Length);
+                    theName = theName.Substring(0, theName.Length - 4);
+                    Directory.CreateDirectory(croppedFilename + theName);
+                    FileStream pageStream = new FileStream(croppedFilename + theName + "\\" + theName + "_" + (i + 1) + ".bmp", FileMode.Create);
                     int startY;
                     int yHeight;
                     int titleHeight = drawer.GetTitleHeight(ref SheetMusic);
@@ -90,7 +97,7 @@ namespace Microcontroller_Music
                         startY = 0;
                         yHeight = titleHeight + pageHeight;
                     }
-                    else if(i == numberOfPages - 1)
+                    else if (i == numberOfPages - 1)
                     {
                         startY = i * pageHeight + titleHeight;
                         yHeight = (int)(bitmapEncoder.Frames[0].Height - titleHeight) % pageHeight;
@@ -100,7 +107,7 @@ namespace Microcontroller_Music
                         startY = i * pageHeight + titleHeight;
                         yHeight = pageHeight;
                     }
-                    CroppedBitmap croppedBitmap = new CroppedBitmap((BitmapSource) new BitmapImage(new Uri(filename)), new Int32Rect(0, startY, 8000, yHeight));
+                    CroppedBitmap croppedBitmap = new CroppedBitmap((BitmapSource)new BitmapImage(new Uri(filename)), new Int32Rect(0, startY, 8000, yHeight));
                     BitmapEncoder pageEncoder = new TiffBitmapEncoder();
                     pageEncoder.Frames.Add(BitmapFrame.Create(croppedBitmap));
                     pageEncoder.Save(pageStream);
@@ -142,13 +149,11 @@ namespace Microcontroller_Music
         public void NewFile(string name = "", int tempo = 120, int keySig = 0, int top = 4, int bottom = 4, string track1title = "Track1", int Key = 0)
         {
             s = new Song(name, tempo, keySig, top, bottom);
-            bool key = (Key == 0) ? true : false;
-
+            bool key = (Key == 0);
             s.NewTrack(track1title, keySig, top, bottom, key);
             writer = new MIDIWriter(s);
             drawer = new Drawer(s);
             drawer.DrawPage(ref SheetMusic, 1800);
-            //this part needs to have dialog boxes for the user! it also needs to have other things! like anything!
         }
 
         //this is designed to get a boolean response from the user 
@@ -163,6 +168,7 @@ namespace Microcontroller_Music
             }
             else return false;
         }
+
         private void Zoom_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             if (SheetMusic.IsLoaded)
@@ -195,11 +201,12 @@ namespace Microcontroller_Music
             {
                 writer.Stop();
             }
-            if(GenerateYesNoDialog("Closing App", "Would you like to save?"))
+            if (GenerateYesNoDialog("Closing App", "Would you like to save?"))
             {
-                saveFile();
+                SaveFile();
             }
         }
+
         private void SheetMusic_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             if (!contextMenu.IsOpen)
@@ -210,7 +217,7 @@ namespace Microcontroller_Music
                 pitch = -1;
                 if (!(e.GetPosition(MainScroll).Y > (int)MainScroll.Height - 20) && !(e.GetPosition(MainScroll).X > (int)MainScroll.Width - 20))
                 {
-                    if (drawer.FindMouseLeft(ref SheetMusic, ref track, ref bar, ref semipos, ref pitch, noteLength, e, (int)Zoom.Value))
+                    if (drawer.FindMouseLeft(ref SheetMusic, ref track, ref bar, ref semipos, ref pitch, noteLength, e))
                     {
                         s.AddNote(track, bar, new Note(noteLength, semipos, pitch));
                         drawer.DrawPage(ref SheetMusic, (int)Zoom.Value);
@@ -227,16 +234,17 @@ namespace Microcontroller_Music
                 int tempBar = -1;
                 int tempSemipos = -1;
                 int tempPitch = -1;
-                drawer.FindMouse(ref SheetMusic, ref tempTrack, ref tempBar, ref tempSemipos, ref tempPitch, noteLength, e, (int)Zoom.Value);
+                drawer.FindMouse(ref SheetMusic, ref tempTrack, ref tempBar, ref tempSemipos, ref tempPitch, noteLength, e);
             }
         }
 
-        private void createNewFile(object sender, RoutedEventArgs e)
+        private void CreateNewFile(object sender, RoutedEventArgs e)
         {
             if (GenerateYesNoDialog("Closing File", "Would you like to save?"))
             {
-                saveFile();
+                SaveFile();
             }
+            filePath = "";
             if (Play_Button.Content.ToString() == "Stop")
             {
                 writer.Stop();
@@ -245,47 +253,49 @@ namespace Microcontroller_Music
             CreateSongPopup createSong = new CreateSongPopup();
             if (createSong.ShowDialog() == true)
             {
-                int tempo = 120;
-                int.TryParse(createSong.Tempo.Text, out tempo);
+                int.TryParse(createSong.Tempo.Text, out int tempo);
                 NewFile(createSong.SongTitle.Text, tempo, createSong.KeySig.SelectedIndex - 7, createSong.TimeSigTop.SelectedIndex + 2,
                     (int)Math.Pow(2, createSong.TimeSigBottom.SelectedIndex + 1), createSong.TrackTitle.Text, createSong.Key.SelectedIndex);
-                bpm.Header = "BPM: " + s.GetBPM();
+                Bpm.Header = "BPM: " + s.GetBPM();
             }
         }
 
-        private void openExistingFile(object sender, RoutedEventArgs e)
+        private void OpenExistingFile(object sender, RoutedEventArgs e)
         {
             if (GenerateYesNoDialog("Closing File", "Would you like to save?"))
             {
-                saveFile();
+                SaveFile();
             }
-            OpenFileDialog fileOpen = new OpenFileDialog();
-            fileOpen.Filter = "Microcontroller Music Files (*.mmf)|*.mmf";
+            filePath = "";
+            OpenFileDialog fileOpen = new OpenFileDialog
+            {
+                Filter = "Microcontroller Music Files (*.mmf)|*.mmf"
+            };
             if (fileOpen.ShowDialog() == true)
             {
                 OpenFile(fileOpen.FileName);
-                bpm.Header = "BPM: " + s.GetBPM();
+                Bpm.Header = "BPM: " + s.GetBPM();
             }
         }
 
         //event handler for the save button
         //actual process removed so it can be called at other points in program.
-        private void saveCurrentFile(object sender, RoutedEventArgs e)
+        private void SaveCurrentFile(object sender, RoutedEventArgs e)
         {
-            saveFile();
+            SaveFile();
         }
 
         //event handler for the save as button
-        private void saveCurrentFileAs(object sender, RoutedEventArgs e)
+        private void SaveCurrentFileAs(object sender, RoutedEventArgs e)
         {
-            saveInNewFilePath();
+            SaveInNewFilePath();
         }
 
-        private void saveFile()
+        private void SaveFile()
         {
             if (filePath == "")
             {
-                saveInNewFilePath();
+                SaveInNewFilePath();
             }
             else
             {
@@ -293,10 +303,12 @@ namespace Microcontroller_Music
             }
         }
 
-        private void saveInNewFilePath()
+        private void SaveInNewFilePath()
         {
-            SaveFileDialog saveFile = new SaveFileDialog();
-            saveFile.Filter = "Microcontroller Music Files (*.mmf)|*.mmf";
+            SaveFileDialog saveFile = new SaveFileDialog
+            {
+                Filter = "Microcontroller Music Files (*.mmf)|*.mmf"
+            };
             if (saveFile.ShowDialog() == true)
             {
                 WriteFile(s, saveFile.FileName);
@@ -312,7 +324,7 @@ namespace Microcontroller_Music
                 bar = -1;
                 semipos = -1;
                 pitch = -1;
-                drawer.FindMouseRight(ref SheetMusic, ref track, ref bar, ref semipos, ref pitch, noteLength, e, (int)Zoom.Value);
+                drawer.FindMouseRight(ref SheetMusic, ref track, ref bar, ref semipos, ref pitch, noteLength, e);
                 MakeContextMenu();
             }
         }
@@ -323,18 +335,24 @@ namespace Microcontroller_Music
             contextMenu.PlacementTarget = SheetMusic;
             if (track != -1)
             {
-                MenuItem trackMenu = new MenuItem();
-                trackMenu.Header = s.GetTracks(track).GetName();
+                MenuItem trackMenu = new MenuItem
+                {
+                    Header = s.GetTrackTitle(track)
+                };
                 #region delete
-                MenuItem trackDeleteMenu = new MenuItem();
-                trackDeleteMenu.Header = "Delete";
+                MenuItem trackDeleteMenu = new MenuItem
+                {
+                    Header = "Delete"
+                };
                 trackDeleteMenu.Click += new RoutedEventHandler(TrackDeleteClick);
                 trackMenu.Items.Add(trackDeleteMenu);
                 #endregion
                 #region insert bar
-                MenuItem insertBarMenu = new MenuItem();
-                insertBarMenu.Header = "Insert Bar";
-                insertBarMenu.Tag = bar;
+                MenuItem insertBarMenu = new MenuItem
+                {
+                    Header = "Insert Bar",
+                    Tag = bar
+                };
                 insertBarMenu.Click += InsertBarMenu_Click;
                 trackMenu.Items.Add(insertBarMenu);
                 #endregion
@@ -342,18 +360,24 @@ namespace Microcontroller_Music
             }
             if (bar != -1)
             {
-                MenuItem barMenu = new MenuItem();
-                barMenu.Header = "Bar " + (bar + 1);
+                MenuItem barMenu = new MenuItem
+                {
+                    Header = "Bar " + (bar + 1)
+                };
                 #region delete
-                MenuItem barDeleteMenu = new MenuItem();
-                barDeleteMenu.Header = "Delete";
+                MenuItem barDeleteMenu = new MenuItem
+                {
+                    Header = "Delete"
+                };
                 barDeleteMenu.Click += new RoutedEventHandler(BarDeleteClick);
                 barMenu.Items.Add(barDeleteMenu);
                 #endregion
                 #region time sig
-                MenuItem timeSigChanger = new MenuItem();
-                timeSigChanger.Header = "Time Sig: " + s.GetTimeSigs()[bar].top + "/" + s.GetTimeSigs()[bar].bottom;
-                timeSigChanger.Tag = bar;
+                MenuItem timeSigChanger = new MenuItem
+                {
+                    Header = "Time Sig: " + s.GetTimeSigs(bar).top + "/" + s.GetTimeSigs(bar).bottom,
+                    Tag = bar
+                };
                 timeSigChanger.Click += TimeSigChanger_Click;
                 barMenu.Items.Add(timeSigChanger);
                 #endregion
@@ -361,13 +385,17 @@ namespace Microcontroller_Music
                 string[] keySigNames = { "Cb Major (7b)", "Gb Major / Eb Minor (6b)" ,"Db Major / Bb Minor (5b)", "Ab Major / F Minor (4b)", "Eb Major / C Minor (3b)",
                 "Bb Major / G Minor (2b)", "F Major / D Minor (1b)", "C Major / A Minor", "G Major / E Minor (1#)", "D Major / B Minor (2#)", "A Major / F# Minor (3#)",
                 "E Major / C# Minor (4#)", "B Major / G# Minor (5#)", "F# Major / D# Minor (6#)", "C# Major (7#)"};
-                MenuItem keySigChanger = new MenuItem();
-                keySigChanger.Header = keySigNames[s.GetKeySigs(bar) + 7];
-                for(int i = 0; i < keySigNames.Length; i++)
+                MenuItem keySigChanger = new MenuItem
                 {
-                    MenuItem selectableKeySig = new MenuItem();
-                    selectableKeySig.Header = keySigNames[i];
-                    selectableKeySig.Tag = i - 7;
+                    Header = keySigNames[s.GetKeySigs(bar) + 7]
+                };
+                for (int i = 0; i < keySigNames.Length; i++)
+                {
+                    MenuItem selectableKeySig = new MenuItem
+                    {
+                        Header = keySigNames[i],
+                        Tag = i - 7
+                    };
                     selectableKeySig.Click += SelectableKeySig_Click;
                     keySigChanger.Items.Add(selectableKeySig);
                 }
@@ -379,19 +407,25 @@ namespace Microcontroller_Music
             {
                 noteIndex = s.FindNote(track, bar, pitch, semipos);
                 Note note = s.GetTracks(track).GetBars(bar).GetNotes(noteIndex) as Note;
-                MenuItem noteMenu = new MenuItem();
-                noteMenu.Header = note.SymbolAsText();
+                MenuItem noteMenu = new MenuItem
+                {
+                    Header = note.SymbolAsText()
+                };
 
                 #region delete
-                MenuItem deleteMenu = new MenuItem();
-                deleteMenu.Header = "Delete";
+                MenuItem deleteMenu = new MenuItem
+                {
+                    Header = "Delete"
+                };
                 deleteMenu.Click += new RoutedEventHandler(DeleteClick);
                 noteMenu.Items.Add(deleteMenu);
                 #endregion
 
                 #region accidental
-                MenuItem acciedentalMenu = new MenuItem();
-                acciedentalMenu.Header = "Accidental";
+                MenuItem acciedentalMenu = new MenuItem
+                {
+                    Header = "Accidental"
+                };
                 MenuItem sharpMenu = new MenuItem() { Header = "Sharp" };
                 if (note.GetAccidental() == 1) sharpMenu.IsChecked = true;
                 MenuItem naturalMenu = new MenuItem() { Header = "Natural" };
@@ -408,10 +442,12 @@ namespace Microcontroller_Music
                 #endregion
 
                 #region staccato
-                MenuItem staccatoMenu = new MenuItem();
-                staccatoMenu.Header = "Staccato";
+                MenuItem staccatoMenu = new MenuItem
+                {
+                    Header = "Staccato"
+                };
                 if (note.GetStaccato()) staccatoMenu.IsChecked = true;
-                staccatoMenu.Click += new RoutedEventHandler(staccatoClick);
+                staccatoMenu.Click += new RoutedEventHandler(StaccatoClick);
                 noteMenu.Items.Add(staccatoMenu);
                 #endregion
 
@@ -419,8 +455,10 @@ namespace Microcontroller_Music
                 List<Symbol> availableTies = s.GetNotesToTie(track, bar, noteIndex);
                 if (availableTies.Count > 0)
                 {
-                    MenuItem tieMenu = new MenuItem();
-                    tieMenu.Header = "Connect To...";
+                    MenuItem tieMenu = new MenuItem
+                    {
+                        Header = "Connect To..."
+                    };
                     if (note.GetTie() != null)
                     {
                         tieMenu.IsChecked = true;
@@ -431,8 +469,10 @@ namespace Microcontroller_Music
                     }
                     foreach (Symbol tieNote in availableTies)
                     {
-                        MenuItem tieOption = new MenuItem();
-                        tieOption.Header = tieNote.SymbolAsText();
+                        MenuItem tieOption = new MenuItem
+                        {
+                            Header = tieNote.SymbolAsText()
+                        };
                         if (note.GetTie() == tieNote) tieOption.IsChecked = true;
                         tieOption.Click += TieOption_Click;
                         tieOption.Tag = tieNote;
@@ -461,7 +501,7 @@ namespace Microcontroller_Music
         private void TimeSigChanger_Click(object sender, RoutedEventArgs e)
         {
             TimeSigChange timeChange = new TimeSigChange();
-            if(timeChange.ShowDialog() == true)
+            if (timeChange.ShowDialog() == true)
             {
                 s.ChangeBarLength((int)(sender as MenuItem).Tag, timeChange.GetTopNumber(), timeChange.GetBottomNumber());
                 drawer.DrawPage(ref SheetMusic, (int)Zoom.Value);
@@ -488,7 +528,7 @@ namespace Microcontroller_Music
             {
                 if (!s.DeleteTrack(track))
                 {
-                    addtrack_Click(sender, e);
+                    AddTrack_Click(sender, e);
                     s.DeleteTrack(track);
                 }
                 drawer.DrawPage(ref SheetMusic, (int)Zoom.Value);
@@ -508,7 +548,7 @@ namespace Microcontroller_Music
             }
         }
 
-        private void staccatoClick(object sender, RoutedEventArgs e)
+        private void StaccatoClick(object sender, RoutedEventArgs e)
         {
             s.ToggleStaccato(track, bar, noteIndex);
             drawer.DrawPage(ref SheetMusic, (int)Zoom.Value);
@@ -537,23 +577,23 @@ namespace Microcontroller_Music
             drawer.DrawPage(ref SheetMusic, (int)Zoom.Value);
         }
 
-        private void addtrack_Click(object sender, RoutedEventArgs e)
+        private void AddTrack_Click(object sender, RoutedEventArgs e)
         {
             CreateTrackPopup createTrack = new CreateTrackPopup();
             if (createTrack.ShowDialog() == true)
             {
-                s.NewTrack(createTrack.GetTitle(), s.GetTracks(0).GetBars(0).GetKeySig(), s.GetTimeSigs()[0].top, s.GetTimeSigs()[0].bottom, createTrack.GetTreble());
+                s.NewTrack(createTrack.GetTitle(), s.GetKeySigs(0), s.GetTimeSigs(0).top, s.GetTimeSigs(0).bottom, createTrack.GetTreble());
             }
             drawer.DrawPage(ref SheetMusic, (int)Zoom.Value);
         }
 
-        private void bpm_Click(object sender, RoutedEventArgs e)
+        private void Bpm_Click(object sender, RoutedEventArgs e)
         {
             BPMChange newBPMDialog = new BPMChange();
-            if(newBPMDialog.ShowDialog() == true)
+            if (newBPMDialog.ShowDialog() == true)
             {
                 int newBPM = 120;
-                if(newBPMDialog.GetNewBPM(ref newBPM))
+                if (newBPMDialog.GetNewBPM(ref newBPM))
                 {
                     if (newBPM < 30 || newBPM > 300)
                     {
@@ -562,7 +602,7 @@ namespace Microcontroller_Music
                     else
                     {
                         s.SetBPM(newBPM);
-                        bpm.Header = "BPM: " + newBPM;
+                        Bpm.Header = "BPM: " + newBPM;
                     }
                 }
                 else
@@ -572,10 +612,10 @@ namespace Microcontroller_Music
             }
         }
 
-        private void changetitle_Click(object sender, RoutedEventArgs e)
+        private void ChangeTitle_Click(object sender, RoutedEventArgs e)
         {
             TitleChange newTitleDialog = new TitleChange();
-            if(newTitleDialog.ShowDialog() == true)
+            if (newTitleDialog.ShowDialog() == true)
             {
                 s.SetTitle(newTitleDialog.GetNewTItle());
                 drawer.DrawPage(ref SheetMusic, (int)Zoom.Value);
@@ -616,11 +656,13 @@ namespace Microcontroller_Music
             }
         }
 
-        private void bitmapExport_Click(object sender, RoutedEventArgs e)
+        private void BitmapExport_Click(object sender, RoutedEventArgs e)
         {
             drawer.MakePreviewInvisible();
-            SaveFileDialog saveFile = new SaveFileDialog();
-            saveFile.Filter = "Bitmap Image (*.bmp)|*.bmp";
+            SaveFileDialog saveFile = new SaveFileDialog
+            {
+                Filter = "Bitmap Image (*.bmp)|*.bmp"
+            };
             if (saveFile.ShowDialog() == true)
             {
                 Action<string> bmp = ExportBitmap;

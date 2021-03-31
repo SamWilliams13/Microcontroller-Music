@@ -19,7 +19,7 @@ namespace Microcontroller_Music
     {
         //retrievable attributes
         [DataMember]
-        private List<Symbol> Notes; //stores all the notes in a bar
+        private readonly List<Symbol> Notes; //stores all the notes in a bar
         [DataMember]
         private int MaxLength; //stores the maximum length of the bar given its time signature
         [DataMember]
@@ -27,7 +27,7 @@ namespace Microcontroller_Music
         [DataMember]
         int Length = 0; //determines how far into the note there is currently noise so that when there is a gap it can be fixed.
         [DataMember]
-        bool multipleMelodyLines;
+        readonly bool multipleMelodyLines;
         //internally used attributes
         private Symbol changedSymbol; //temporary value used for checking whether a change should be made.
         private int tempCheck; //temporary value to store the code returned by a checkfit test.
@@ -48,32 +48,14 @@ namespace Microcontroller_Music
             return Notes; //pretty much it
         }
 
+        public int GetNoteCount()
+        {
+            return Notes.Count;
+        }
+
         public Symbol GetNotes(int noteIndex)
         {
             return Notes[noteIndex];
-        }
-
-        public List<int> GetPitchesAtPoint(int startPoint) //mostly used to find notes that start at a given point for ties and eventually slurs
-        {
-            List<int> positiveResults = new List<int>();
-            foreach (Symbol n in Notes)
-            {
-                if (n.GetStart() == startPoint)
-                {
-                    if (n is Note)
-                    {
-                        positiveResults.Add((n as Note).GetPitch());
-                    }
-                    else if (n is Tuplet)
-                    {
-                        if ((n as Tuplet).GetComponent(0) is Note)
-                        {
-                            positiveResults.Add(((n as Tuplet).GetComponent(0) as Note).GetPitch());
-                        }
-                    }
-                }
-            }
-            return positiveResults;
         }
 
         public int GetLength() //returns the current length of the symbols in the bar.
@@ -223,18 +205,8 @@ namespace Microcontroller_Music
                         }
                     }
                 }
-                
                 //the line above check if the notes overlap and are the same pitch/position on the stave/one is a rest/both are rests
             }
-            int tempLength = newNote.GetLength();
-                /*if (Math.Log(tempLength, 2) % 1 != 0)
-                {
-                    tempLength = (int)(tempLength / 1.5);
-                }
-                if (newNote.GetStart() % tempLength != 0 && newNote.GetStart() % 2 == 1)
-                {
-                    return 7;
-                }*/
             return 0; //0 means the change is possible
         }
 
@@ -365,54 +337,6 @@ namespace Microcontroller_Music
             {
                 FillGap(fixUntil, ref noiseUntil);
             }
-            SortNotes();
-        }
-
-        public void FixSpacing(bool notTheLastBar, int previewStart, int previewLength)
-        {
-            int noiseUntil = 0;
-            int fixUntil;
-            bool restRemoved;
-            Note tempNote = new Note(previewLength, previewStart);
-            Notes.Add(tempNote);
-            if (Notes.Count > 1)
-            {
-                SortNotes();
-            }
-            do
-            {
-                restRemoved = false;
-                for (int i = 0; i < Notes.Count; i++)
-                {
-                    if (Notes[i] is Rest)
-                    {
-                        Notes.Remove(Notes[i]);
-                        restRemoved = true;
-                    }
-                }
-            } while (restRemoved == true);
-            for (int i = 0; i < Notes.Count; i++)
-            {
-                if (Notes[i].GetStart() > noiseUntil)
-                {
-                    FillGap(Notes[i].GetStart(), ref noiseUntil);
-                    noiseUntil += Notes[i].GetLength();
-                }
-                else if ((Notes[i].GetStart() + Notes[i].GetLength()) > noiseUntil)
-                {
-                    noiseUntil = Notes[i].GetStart() + Notes[i].GetLength();
-                }
-            }
-            if (notTheLastBar)
-            {
-                fixUntil = MaxLength;
-            }
-            else fixUntil = Length;
-            if (noiseUntil < fixUntil)
-            {
-                FillGap(fixUntil, ref noiseUntil);
-            }
-            Notes.Remove(tempNote);
             SortNotes();
         }
 
@@ -578,29 +502,6 @@ namespace Microcontroller_Music
             }
         }
 
-        public int ToggleRest(int noteIndex)
-        {
-            changedSymbol = Notes[noteIndex];
-            if (Notes[noteIndex] is Note)
-            {
-                changedSymbol = new Rest(Notes[noteIndex].GetLength(), Notes[noteIndex].GetStart());
-            }
-            else if (Notes[noteIndex] is Tuplet)
-            {
-                (changedSymbol as Tuplet).ToggleSymbolType(TupletIndex);
-            }
-            else if (Notes[noteIndex] is Rest)
-            {
-                changedSymbol = new Note(Notes[noteIndex].GetLength(), Notes[noteIndex].GetStart(), 40);
-            }
-            int tempCheck = CheckFit(changedSymbol);
-            if (tempCheck == 0)
-            {
-                Notes[noteIndex] = changedSymbol;
-            }
-            return tempCheck;
-        }
-
         public int ChangeAccidental(int noteIndex, int newAccident) //checks if the new pitch works, then uses note.setaccidental
         {
             int original = 0;
@@ -640,51 +541,6 @@ namespace Microcontroller_Music
             else return 5; //error: is rest.
         }
 
-        public int ChangePitch(int noteIndex, int newPitch) //makes sure the new pitch fits and then changes the pitch of the desired note. Causes any note with a forced accidental to lose it...
-        {
-            changedSymbol = Notes[noteIndex];
-            if (changedSymbol is Note)
-            {
-                (changedSymbol as Note).SetAccidental(0);
-                (changedSymbol as Note).SetPitch(newPitch);
-                for (int i = 1; i < 8; i++)
-                {
-                    if (KeySigIndex >= i && (changedSymbol as Note).GetPitch() % 12 == (7 * i + 2) % 12)
-                    {
-                        (changedSymbol as Note).SetAccidental(1);
-                    }
-                    if (KeySigIndex <= (-1 * i) && (changedSymbol as Note).GetPitch() % 12 == Math.Abs((-7 * i + 10) % 12))
-                    {
-                        (changedSymbol as Note).SetAccidental(-1);
-                    }
-                }
-            }
-            else if (changedSymbol is Tuplet)
-            {
-                ((changedSymbol as Tuplet).GetComponent(TupletIndex) as Note).SetAccidental(0);
-                (changedSymbol as Tuplet).SetPitch(newPitch, TupletIndex);
-                for (int i = 1; i < 8; i++)
-                {
-                    if (KeySigIndex >= i && ((changedSymbol as Tuplet).GetComponent(TupletIndex) is Note) &&
-                        ((changedSymbol as Tuplet).GetComponent(TupletIndex) as Note).GetPitch() % 12 == (7 * i + 2) % 12)
-                    {
-                        (changedSymbol as Tuplet).SetAccidental(1, TupletIndex);
-                    }
-                    if (KeySigIndex <= (-1 * i) && ((changedSymbol as Tuplet).GetComponent(TupletIndex) is Note) &&
-                        ((changedSymbol as Tuplet).GetComponent(TupletIndex) as Note).GetPitch() % 12 == (-7 * i + 10) % 12)
-                    {
-                        (changedSymbol as Tuplet).SetAccidental(-1, TupletIndex);
-                    }
-                }
-            }
-            tempCheck = CheckFit(changedSymbol);
-            if (tempCheck == 0) //checks if the new note can be placed in the bar - essentially checking for duplicates as well as sharps
-            {
-                Notes[noteIndex] = changedSymbol;
-            }
-            return tempCheck;
-        }
-
         public void ChangeKeySig(int newSig) //handles changing the key signature
         {
             if (newSig <= 7 && newSig >= -7)
@@ -692,30 +548,6 @@ namespace Microcontroller_Music
                 KeySigIndex = newSig;
             }
             else MainWindow.GenerateErrorDialog("Invalid Operation", "This is not a real key signature");
-        }
-
-        public int ChangeStartPoint(int noteIndex, int newStart)
-        {
-            changedSymbol = Notes[noteIndex];
-            changedSymbol.SetStart(newStart);
-            tempCheck = CheckFit(changedSymbol);
-            if (tempCheck == 0)
-            {
-                Notes[noteIndex] = changedSymbol;
-            }
-            return tempCheck;
-        }
-
-        public int ChangeLength(int noteIndex, int newLength)
-        {
-            changedSymbol = Notes[noteIndex];
-            changedSymbol.SetLength(newLength);
-            tempCheck = CheckFit(changedSymbol);
-            if (tempCheck == 0)
-            {
-                Notes[noteIndex] = changedSymbol;
-            }
-            return tempCheck;
         }
 
         public void ChangeLength(int newLength)

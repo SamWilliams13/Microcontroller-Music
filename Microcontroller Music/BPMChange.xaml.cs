@@ -25,7 +25,7 @@ namespace Microcontroller_Music
         }
 
         //allows the program to carry on with BPM change and closes dialog
-        private void button_Click(object sender, RoutedEventArgs e)
+        private void Button_Click(object sender, RoutedEventArgs e)
         {
             this.DialogResult = true;
             this.Close();

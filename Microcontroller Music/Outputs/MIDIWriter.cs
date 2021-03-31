@@ -12,9 +12,10 @@ namespace Microcontroller_Music
         //array of instruments so that each track can be played on a different instrument
         Instrument[] instruments;
         //device used to play the MIDI - Microsoft Wavetable GS Synth tends to be the default
-        OutputDevice output;
+        private OutputDevice output;
+
         //used to schedule all notes before they are played. no need to have threading and sleep.
-        Clock clock;
+        private readonly Clock clock;
         //constructor - calls base to set memory address of song to songToConvert.
         public MIDIWriter(Song s) : base(s)
         {
@@ -28,15 +29,15 @@ namespace Microcontroller_Music
         {
             //Step 1 is to get all the information for the user in a presentable manner. 
             //First line makes an array of the right length to store the names of all tracks for display reasons.
-            string[] namesArray = new string[songToConvert.GetTracks().Count];
+            string[] namesArray = new string[songToConvert.GetTrackCount()];
             //loop through all the tracks in the song
-            for (int i = 0; i < songToConvert.GetTracks().Count; i++)
+            for (int i = 0; i < songToConvert.GetTrackCount(); i++)
             {
                 //add the name of the track to the array
                 namesArray[i] = songToConvert.GetTracks(i).GetName();
             }
             //make a dialog box with the needed information to let the user select output and instrument
-            MIDIDetails detailsBox = new MIDIDetails(songToConvert.GetTracks().Count, namesArray);
+            MIDIDetails detailsBox = new MIDIDetails(songToConvert.GetTrackCount(), namesArray);
             //check the user wants to go ahead
             if (detailsBox.ShowDialog() == true)
             {
@@ -67,7 +68,7 @@ namespace Microcontroller_Music
                 repeats.Add((int[])r.Clone());
             }
             //loop through each track. do one track completely before starting on the next one
-            for (int i = 0; i < songToConvert.GetTracks().Count; i++)
+            for (int i = 0; i < songToConvert.GetTrackCount(); i++)
             {
                 //sets the channel that the track is going to be played on to the desired instrument.
                 output.SendProgramChange((Channel)i, instruments[i]);

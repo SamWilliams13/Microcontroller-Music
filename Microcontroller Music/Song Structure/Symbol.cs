@@ -48,12 +48,6 @@ namespace Microcontroller_Music
             }
         }
 
-        //sets start point (most error checking takes place in bar for this)
-        public void SetStart(int Start) 
-        {
-            StartPoint = Start;
-        }
-
         //returns a string descriptor of the note.
         public abstract string SymbolAsText();
     }

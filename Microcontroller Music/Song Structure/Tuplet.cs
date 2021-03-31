@@ -11,13 +11,13 @@ namespace Microcontroller_Music
     public class Tuplet : Symbol
     {
         [DataMember]
-        Symbol[] Components; //a tuplet is just a collection of notes that take place over a certain length
+        private readonly Symbol[] Components; //a tuplet is just a collection of notes that take place over a certain length
         [DataMember]
-        Symbol DefaultNote; //stores the original value of each component in the triplet
+        private readonly Symbol DefaultNote; //stores the original value of each component in the triplet
         [DataMember]
-        Symbol Tie;
+        private Symbol Tie;
         [DataMember]
-        Symbol TiedTo;
+        private Symbol TiedTo;
 
         public Tuplet(int length, int notes, int startpoint, Symbol GenericNote)
         {
@@ -138,18 +138,6 @@ namespace Microcontroller_Music
             {
                 MainWindow.GenerateErrorDialog("Invalid Operation", "This note is a rest and therefore cannot have an accidental");
                 return -2;//shows the user an error message if rest
-            }
-        }
-
-        public void SetPitch(int pitch, int index) //changes the pitch of the note. for intended use, this shouldn't cause any errors but may need to be returned to
-        {
-            if (Components[index] is Rest)
-            {
-                MainWindow.GenerateErrorDialog("Invalid Operation", "This note cannot be made into a staccato as it is a rest"); //shows the user an error message if rest
-            }
-            else
-            {
-                (Components[index] as Note).SetPitch(pitch);
             }
         }
 
