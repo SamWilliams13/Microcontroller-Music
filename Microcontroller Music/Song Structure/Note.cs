@@ -75,16 +75,18 @@ namespace Microcontroller_Music
             return Accidental;
         }
 
-        //returns the note as text in a similar fashion to what 
+        //returns the note as text in a similar fashion to what is needed in menus
         public override string SymbolAsText()
         {
                 string noteString = "";
                 int length = Length;
+                //if the note isn't a multiple of 2 then it must be dotted
                 if (Math.Log(length, 2) % 1 != 0)
                 {
                     noteString += "Dotted ";
                     length = (int)(length / 1.5);
                 }
+                //get the name of the note from its undotted length
                 switch (length)
                 {
                     case 1:
@@ -103,6 +105,8 @@ namespace Microcontroller_Music
                         noteString += "Semibreve ";
                         break;
                 }
+                //remove the accidental from the pitch to find its letter value
+                //also handle a few cases where flats or sharps don't exist for the note
                 int pitch = Pitch - Accidental;
                 int acc = Accidental;
                 int octLetter = pitch % 12;
@@ -174,6 +178,7 @@ namespace Microcontroller_Music
                         noteString += "G";
                         break;
                 }
+                //if the accidental isn't already handled then add it on here
                 if (octLetter != 3 && octLetter != 4 && octLetter != 8 && octLetter != 9)
                 {
                     switch (Accidental)
@@ -186,6 +191,7 @@ namespace Microcontroller_Music
                             break;
                     }
                 }
+                //then calculate which octave the note is in.
                 noteString = (Pitch % 12 >= 3) ? noteString + (((Pitch - Pitch % 12) / 12) + 1) : noteString + ((Pitch - Pitch % 12) / 12);
                 return noteString;
         }

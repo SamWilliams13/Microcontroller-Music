@@ -20,7 +20,6 @@ namespace Microcontroller_Music
     public partial class TimeSigChange : Window
     {
         int previousTop;
-        int previousSelection;
         public TimeSigChange()
         {
             InitializeComponent();
@@ -51,7 +50,6 @@ namespace Microcontroller_Music
             {
                 TopNumber.Items.Add(new ComboBoxItem() { Content = i });
             }
-            previousSelection = BottomNumber.SelectedIndex;
             TopNumber.SelectedIndex = previousTop;
         }
 

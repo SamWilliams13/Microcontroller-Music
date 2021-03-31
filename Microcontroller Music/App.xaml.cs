@@ -16,14 +16,17 @@ namespace Microcontroller_Music
         private void AppStart(object sender, StartupEventArgs e)
         {
             MainWindow window = new MainWindow();
+            //makes it so that a file can be opened directly from explorer
             if(e.Args.Length == 1 && e.Args[0].EndsWith(".mmf"))
             {
-                window.OpenFile(e.Args[0]);//return here to do auto-open once open is written :)
+                window.OpenFile(e.Args[0]);
             }
+            //if no file is being opened then provide the basic file.
             else
             {
                 window.NewFile();
             }
+            //open the window
             window.Show();
         }
     }

@@ -35,10 +35,9 @@ namespace Microcontroller_Music
         private int pitch = -1;
         private int noteIndex = -1;
         private int noteLength = 2;
-        static Label statusLabel = new Label();
-#pragma warning disable IDE0044 // Add readonly modifier
-        private ContextMenu contextMenu = new ContextMenu();
-#pragma warning restore IDE0044 // Add readonly modifier
+        static readonly Label statusLabel = new Label();
+        private readonly ContextMenu contextMenu = new ContextMenu();
+
         //makes a new window at launch
         public MainWindow()
         {

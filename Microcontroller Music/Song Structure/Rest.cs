@@ -19,9 +19,11 @@ namespace Microcontroller_Music
             StartPoint = startpoint;
         }
 
+        //returns the note as string
         public override string SymbolAsText()
         {
             string restAsText = "";
+            //adds on the name based on its length
             switch (Length)
             {
                 case 1:
@@ -40,7 +42,9 @@ namespace Microcontroller_Music
                     restAsText += "Semibreve";
                     break;
             }
+            //it's a rest
             restAsText += " Rest";
+            //return the complete string
             return restAsText;
         }
     }

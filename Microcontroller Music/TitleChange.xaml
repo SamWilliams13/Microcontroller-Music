@@ -9,7 +9,7 @@
     <Grid>
         <Label x:Name="label" Content="New Title:" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
         <TextBox x:Name="textBox" HorizontalAlignment="Left" Height="26" Margin="77,10,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="580"/>
-        <Button x:Name="button" Content="OK" HorizontalAlignment="Left" Margin="582,62,0,0" VerticalAlignment="Top" Width="75" Click="button_Click" />
+        <Button x:Name="button" Content="OK" HorizontalAlignment="Left" Margin="582,62,0,0" VerticalAlignment="Top" Width="75" Click="Button_Click" />
 
     </Grid>
 </Window>

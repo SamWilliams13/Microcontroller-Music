@@ -98,7 +98,6 @@
     <Compile Include="Song Structure\Song.cs" />
     <Compile Include="Song Structure\Track.cs" />
     <Compile Include="Song Structure\Symbol.cs" />
-    <Compile Include="Song Structure\Tuplet.cs" />
     <Compile Include="Outputs\Writer.cs" />
     <Compile Include="TimeSigChange.xaml.cs">
       <DependentUpon>TimeSigChange.xaml</DependentUpon>

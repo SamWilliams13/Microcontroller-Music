@@ -7,13 +7,18 @@
         mc:Ignorable="d"
         Title="CreateTrackPopup" Height="166.621" Width="369.459">
     <Grid Margin="10,10,2,2">
+        <!-- textbox for user to enter a title for the track-->
         <TextBox x:Name="TrackTitle" HorizontalAlignment="Left" Height="23" Margin="137,10,0,0" TextWrapping="Wrap" Text="Track " VerticalAlignment="Top" Width="202"/>
+        <!-- label to tell user to enter a title in text box-->
         <Label x:Name="label" Content="Track Title:" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
+        <!-- label to tell user to enter a key for track in combobox-->
         <Label x:Name="label2" Content="Key:" HorizontalAlignment="Left" Margin="10,47,0,0" VerticalAlignment="Top"/>
+        <!-- combobox to select key-->
         <ComboBox x:Name="KeyBox" HorizontalAlignment="Left" Margin="137,51,0,0" VerticalAlignment="Top" Width="202" SelectedIndex="0">
             <ComboBoxItem Content="Treble"/>
             <ComboBoxItem Content="Bass"/>
         </ComboBox>
+        <!-- ok button to close window and continue-->
         <Button x:Name="OKButton" Content="OK" HorizontalAlignment="Left" Margin="264,94,0,0" VerticalAlignment="Top" Width="75" Click="OKButton_Click"/>
     </Grid>
 </Window>

@@ -22,21 +22,22 @@ namespace Microcontroller_Music
     public partial class MIDIDetails : Window
     {
         //magic numbers defined below:
-        const int comboBoxHeight = 30;
-        const int avoidTaskbarHeight = 40;
-        const int numberOfMidiInstruments = 128;
+        private const int comboBoxHeight = 30;
+        private const int avoidTaskbarHeight = 40;
+        private const int numberOfMidiInstruments = 128;
+
         //governs how many rows are made
-        int noTracks;
+        private readonly int noTracks;
         //used to store the names of tracks taken from song so the entire thing doesn't need to be accessed
-        string[] trackNames;
+        private readonly string[] trackNames;
         //all the labels to tell the user which track they are selecting the instrument for
-        Label[] trackInstructions;
+        private readonly Label[] trackInstructions;
         //all the comboboxes that hold lists of all the instruments for selection in each channel
-        ComboBox[] instrumentSelections;
+        private readonly ComboBox[] instrumentSelections;
         //a button, calls the events to stop the box
-        Button okButton;
+        private readonly Button okButton;
         //used to differentiate between the dialog closing because it was cancelled or because it was ok'd
-        bool isOK = false;
+        private bool isOK = false;
 
         //constructor
         public MIDIDetails(int tracks, string[] tracknames) 
@@ -102,17 +103,21 @@ namespace Microcontroller_Music
             for(int i = 0; i < noTracks; i++)
             {
                 // make a new row
-                    RowDefinition newRow = new RowDefinition();
-                //set the row's height to be the same as others
-                    newRow.Height = new GridLength(comboBoxHeight);
+                RowDefinition newRow = new RowDefinition
+                {
+                    //set the row's height to be the same as others
+                    Height = new GridLength(comboBoxHeight)
+                };
                 //add the row to the grid
-                    MainGrid.RowDefinitions.Add(newRow);
+                MainGrid.RowDefinitions.Add(newRow);
                 //initialise this row's label in the array
-                    trackInstructions[i] = new Label();
-                //set the content of the row's label to be the title of the track
-                    trackInstructions[i].Content = trackNames[i];
+                trackInstructions[i] = new Label
+                {
+                    //set the content of the row's label to be the title of the track
+                    Content = trackNames[i]
+                };
                 //fill the combobox with the names of all available instruments for this track
-                    PopulateInstrumentSelector(i);
+                PopulateInstrumentSelector(i);
                 //place the label in the track's row
                     Grid.SetRow(trackInstructions[i], i + 1);
                 //place the label in the left column
@@ -128,9 +133,11 @@ namespace Microcontroller_Music
             }
             //this line is repeated here to save a condition being met every time in a loop
             //create the new row
-            RowDefinition okRow = new RowDefinition();
-            //set the row's height to 30 or whatever it ends up being
-            okRow.Height = new GridLength(comboBoxHeight);
+            RowDefinition okRow = new RowDefinition
+            {
+                //set the row's height to 30 or whatever it ends up being
+                Height = new GridLength(comboBoxHeight)
+            };
             //add the row to the grid
             MainGrid.RowDefinitions.Add(okRow);
             //make the button say ok

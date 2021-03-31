@@ -25,7 +25,7 @@ namespace Microcontroller_Music
         }
 
         //handles pressing the OK button so the main program can continue on
-        private void button_Click(object sender, RoutedEventArgs e)
+        private void Button_Click(object sender, RoutedEventArgs e)
         {
             this.DialogResult = true;
             this.Close();

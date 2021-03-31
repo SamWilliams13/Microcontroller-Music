@@ -140,110 +140,16 @@ namespace Microcontroller_Music
             //initialises the bar starts and lengths arrays to be the same length as the number of bars in the song
             barStarts = new int[SongToDraw.GetTotalBars()];
             barLengths = new int[SongToDraw.GetTotalBars()];
+            //variable used to show the y coordinate of the current line being looked at - starts at -
+            int lineStarter = extraHeight;
             //deletes all the currently held information about how many bars are in each line
             barsPerLine.Clear();
             //resets the current bar in line to be at the start
             currentBarInLine = 0;
             //deletes all the objects currently on the canvas so they can be replaced.
             canvas.Children.Clear();
-            #region determine the heights of lines and how many bars per line and the lengths of bars
-            //sets the canvas width - equal to the maximum length of the bars on one line and the space to the left, and 2 semiquavers worth of space to the right
-            canvasWidth = semiquaverwidth * maxLengthPerLine + reservedForTrackTitles + 2 * semiquaverwidth;
-            //updates the total number of tracks in the song
-            totalInstruments = SongToDraw.GetTrackCount();
-            //sets the height of each line to 
-            lineHeight = (maxLinesAbove * 2 + 5) * lineGap;
-            //variable used to show the y coordinate of the current line being looked at - starts at -
-            int lineStarter = extraHeight;
-            //barsthisline is used to store the value to be added to bars per line, while the number of bars that fit is being calculated.
-            int barsThisLine = 0;
-            //current bar length is used to add to the length of the bar for extra features such as key sigs
-            int currentBarLength;
-            //current line length stores the cumulative total 
-            int currentLineLength = 0;
-            //loop through all bars to get the length required to display them and assign bars to lines.
-            for (int i = 0; i < SongToDraw.GetTotalBars(); i++)
-            {
-                //booleans to check whether the time signature or key signature needs to be displayed on this bar.
-                bool changeTimeSig = false;
-                bool changeKeySig = false;
-                //bar length defaults to the length of the bar in semiquavers with one semiquaver either side for padding
-                currentBarLength = SongToDraw.GetSigLength(i) + 2;
-                //if it is the first bar or the time signature changes, then the time sig must be changed, add space for that in bar. 
-                if ((i == 0) || (i > 0 && SongToDraw.TimeSigIsDifferentToPrevious(i)))
-                {
-                    currentBarLength += 1;
-                    changeTimeSig = true;
-                }
-                //if it is the first bar or the key signature changes (not supported)
-                if ((i == 0) || (i > 0 &&
-                    SongToDraw.GetKeySigs(i) != SongToDraw.GetKeySigs(i - 1)))
-                {
-                    //calculate the amount of space needed for the key signature (integer key signature multiplied by the space required for 1 symbol)
-                    //add that value to the length of the current bar
-                    //this is so you can have the naturals that appear to differentiate the "no sharps" c major.
-                    if (i != 0 && SongToDraw.GetKeySigs(i) == 0)
-                    {
-                        currentBarLength += (int)Math.Ceiling(Math.Abs(keySigWidthPerSign * SongToDraw.GetKeySigs(i - 1)));
-                    }
-                    else
-                    {
-                        currentBarLength += (int)Math.Ceiling(Math.Abs(keySigWidthPerSign * SongToDraw.GetKeySigs(i)));
-                    }
-                    //keysig has been displayed this bar.
-                    changeKeySig = true;
-                }
-                //if the length of this bar can fit on the current line
-                if (currentBarLength + currentLineLength <= maxLengthPerLine)
-                {
-                    //sets the starting x position of the bar to be 2 semiquavers after the previous one for padding
-                    barStarts[i] = currentLineLength + 2;
-                    //update the length of the current line
-                    currentLineLength += currentBarLength;
-                    //store the length of the bar in this array
-                    barLengths[i] = currentBarLength;
-                    //increase the number of bars to be drawn on this line.
-                    barsThisLine++;
-                }
-                //if the bar doesn't fit onto the current line, then add the previous line to the list and make a new one
-                else
-                {
-                    //set the start of the bar to be 2 padding semiquavers after the reserved space on the left.
-                    barStarts[i] = 2;
-                    //add the number of bars on the line (the ones up to but not including this bar) to the list of bars on each line 
-                    barsPerLine.Add(barsThisLine);
-                    //if it isn't already drawing the key signature, then it must do so
-                    if (!changeKeySig)
-                    {
-                        //add the space for the key signature with the same calculation as before
-                        currentBarLength += (int)Math.Ceiling(Math.Abs(keySigWidthPerSign * SongToDraw.GetKeySigs(i)));
-                        //make sure the start point of the bar is adjusted to fit later.
-                        changeKeySig = true;
-                    }
-                    //add the length of the bar to a fresh line length
-                    currentLineLength = currentBarLength;
-                    //add the length of the bar to the array
-                    barLengths[i] = currentBarLength;
-                    //reset the barsThisLine count
-                    barsThisLine = 1;
-                }
-                //if the key signature or time sig is displayed, move the start point of the notes in the bar to make room. Uses the same calculation as the one for bar length
-                //this must be done later as the bar start might be moved to a new line.
-                if (changeKeySig) barStarts[i] += (int)Math.Ceiling(Math.Abs(keySigWidthPerSign * SongToDraw.GetKeySigs(i)));
-                //this can be done as the previous line adds nothing in this instance. however it needs to add enough space to fit the natural signs to get the signature back to 0.
-                if (changeKeySig && i > 0 && SongToDraw.GetKeySigs(i) == 0) barStarts[i] += (int)Math.Ceiling(Math.Abs(keySigWidthPerSign * SongToDraw.GetKeySigs(i - 1)));
-                if (changeTimeSig) barStarts[i] += 1;
-            }
-            //add the final line to the list
-            barsPerLine.Add(barsThisLine);
-            //update total lines so it can be used to count in the loop
-            totalLines = barsPerLine.Count;
-            //initialise line starts with the number of lines required.
-            lineStarts = new int[totalLines];
-            //calculate the height of the canvas using the title height added to the total number of lines for each track x number of tracks x height of each line;
-            canvasHeight = extraHeight + (totalLines * lineHeight * totalInstruments);
-            //update the height of the canvas
-            canvas.Height = canvasHeight;
+            //calculate where the bars should go and how much space they take
+            CalculateBarsPerLineEtc(ref canvas);
             //add the preview note and each of the ledger lines to the canvas so they can move around and be vidible without updating the whole page.
             canvas.Children.Add(Preview);
             for (int i = 0; i < 4; i++)
@@ -252,7 +158,6 @@ namespace Microcontroller_Music
             }
             //call the scaling function so the amount of zoom is maintained when drawing the page again.
             Zoom(canvas, zoomValue);
-            #endregion
             #region draw and populate bars
             //AddTitle is used here to draw the title at the top of the page
             AddTitle(ref canvas);
@@ -265,24 +170,8 @@ namespace Microcontroller_Music
                 lineStarts[currentLine] = lineStarter;
                 //increase the cumulative variable the make the next line for the first instrument appears below the line for the last instrument
                 lineStarter += lineHeight * totalInstruments;
-                #region draw track grouping line
-                //instrumentGrouping is the long line on the left that goes through all the tracks that would play concurrently.
-                Line instrumentGrouping = new Line
-                {
-                    //starts after the padding
-                    X1 = reservedForTrackTitles
-                };
-                //is vertical
-                instrumentGrouping.X2 = instrumentGrouping.X1;
-                //starts at the top of the first stave (the linegap/2 is so that it is in line with the top stave line instead of just above it)
-                instrumentGrouping.Y1 = lineStarts[currentLine] + maxLinesAbove * lineGap + lineGap / 2;
-                //ends at the bottom of the last stave
-                instrumentGrouping.Y2 = lineStarts[currentLine] + lineHeight * (totalInstruments - 1) + (maxLinesAbove + 5) * lineGap - lineGap / 2;
-                //assign drawing properties to the line and add line to the canvas.
-                instrumentGrouping.Stroke = black;
-                instrumentGrouping.StrokeThickness = barDividerThickness;
-                canvas.Children.Add(instrumentGrouping);
-                #endregion
+                //draw the lines on the left of the page that go through multiple tracks
+                DrawTrackGroupingLine(ref canvas);
                 //this part loops through each instrument for the line
                 for (currentInstrument = 0; currentInstrument < totalInstruments; currentInstrument++)
                 {
@@ -290,58 +179,15 @@ namespace Microcontroller_Music
                     int lineStart = lineStarts[currentLine] + (lineHeight * currentInstrument) + ((maxLinesAbove + 4) * lineGap);
                     //barlength is the pixel length of the bar so far to draw in the bar dividers
                     int barLength = semiquaverwidth;
-                    #region draw clef
-                    Image clef = new Image();
-                    //if it's a treble clef
-                    if (SongToDraw.GetTracks(currentInstrument).GetTreble())
-                    {
-                        //locate the treble image from the folder
-                        clef.Source = new BitmapImage(new Uri(string.Concat(exePath, "\\source\\TrebleClef.png"), UriKind.Absolute));
-                        //set top of image to be the top of the stave and a bit higher to look nice. 2 is fudge number
-                        //must swirl around g
-                        Canvas.SetTop(clef, lineStart - lineGap * 5 - 2);
-                        //places the clef immediately after the padding
-                        Canvas.SetLeft(clef, reservedForTrackTitles);
-                        //makes the clef appropriate size
-                        clef.Height = lineGap * 7.5;
-                    }
-                    //otherwise it is a bass clef
-                    else
-                    {
-                        //find the source image in folder
-                        clef.Source = new BitmapImage(new Uri(string.Concat(exePath, "\\source\\FClef.png"), UriKind.Absolute));
-                        //make the bass clef appear in the middle of stave
-                        //must colon around f
-                        Canvas.SetTop(clef, lineStart - lineGap * 3.5);
-                        //offset the clef a bit to the right so the spacing looks ok
-                        Canvas.SetLeft(clef, reservedForTrackTitles + 10);
-                        //bass clef is quite a bit smaller
-                        clef.Height = lineGap * 3;
-                    }
-                    //add clef to canvas.
-                    canvas.Children.Add(clef);
-                    #endregion
+                    //draw the clef at start of line
+                    DrawClef(ref canvas, lineStart);
                     //this part loops through each bar in a line
                     for (currentBarInLine = 0; currentBarInLine < barsPerLine[currentLine]; currentBarInLine++)
                     {
                         //increase the length of the bar covered to include the current length as well (canvas units)
                         barLength += barLengths[barsDone + currentBarInLine] * semiquaverwidth;
-                        #region draw bar dividers
-                        //draws the divide between bars (vertical line)
-                        Line barDivide = new Line
-                        {
-                            //x position is the point at the end of bar
-                            X1 = barLength + reservedForTrackTitles
-                        };
-                        barDivide.X2 = barDivide.X1;
-                        //y position is top and bottom of 1 stave
-                        barDivide.Y1 = lineStarts[currentLine] + (lineHeight * currentInstrument) + (maxLinesAbove * lineGap) + lineGap / 2;
-                        barDivide.Y2 = lineStarts[currentLine] + lineHeight * currentInstrument + (maxLinesAbove + 5) * lineGap - lineGap / 2;
-                        //add line properties to divider and add to canvas.
-                        barDivide.Stroke = black;
-                        barDivide.StrokeThickness = barDividerThickness;
-                        canvas.Children.Add(barDivide);
-                        #endregion
+                        //draws lines to split up bars
+                        DrawBarDividers(ref canvas, barLength);
                         //variable used is the start point of the first note in the bar (used as a relative position to draw the time signature and key signature)
                         int barStart = reservedForTrackTitles + (barStarts[barsDone + currentBarInLine] * semiquaverwidth);
                         #region drawing time signature
@@ -516,6 +362,180 @@ namespace Microcontroller_Music
             #endregion
         }
 
+        //draws the lines that split up bars
+        private void DrawBarDividers(ref Canvas canvas, int barLength)
+        {
+            //draws the divide between bars (vertical line)
+            Line barDivide = new Line
+            {
+                //x position is the point at the end of bar
+                X1 = barLength + reservedForTrackTitles
+            };
+            barDivide.X2 = barDivide.X1;
+            //y position is top and bottom of 1 stave
+            barDivide.Y1 = lineStarts[currentLine] + (lineHeight * currentInstrument) + (maxLinesAbove * lineGap) + lineGap / 2;
+            barDivide.Y2 = lineStarts[currentLine] + lineHeight * currentInstrument + (maxLinesAbove + 5) * lineGap - lineGap / 2;
+            //add line properties to divider and add to canvas.
+            barDivide.Stroke = black;
+            barDivide.StrokeThickness = barDividerThickness;
+            canvas.Children.Add(barDivide);
+        }
+
+        //draws the long line on left of page
+        private void DrawTrackGroupingLine(ref Canvas canvas)
+        {
+            //instrumentGrouping is the long line on the left that goes through all the tracks that would play concurrently.
+            Line instrumentGrouping = new Line
+            {
+                //starts after the padding
+                X1 = reservedForTrackTitles
+            };
+            //is vertical
+            instrumentGrouping.X2 = instrumentGrouping.X1;
+            //starts at the top of the first stave (the linegap/2 is so that it is in line with the top stave line instead of just above it)
+            instrumentGrouping.Y1 = lineStarts[currentLine] + maxLinesAbove * lineGap + lineGap / 2;
+            //ends at the bottom of the last stave
+            instrumentGrouping.Y2 = lineStarts[currentLine] + lineHeight * (totalInstruments - 1) + (maxLinesAbove + 5) * lineGap - lineGap / 2;
+            //assign drawing properties to the line and add line to the canvas.
+            instrumentGrouping.Stroke = black;
+            instrumentGrouping.StrokeThickness = barDividerThickness;
+            canvas.Children.Add(instrumentGrouping);
+        }
+
+        //calculates where bars should be and how many per line and how much space they take up etc
+        private void CalculateBarsPerLineEtc(ref Canvas canvas)
+        {
+            //sets the canvas width - equal to the maximum length of the bars on one line and the space to the left, and 2 semiquavers worth of space to the right
+            canvasWidth = semiquaverwidth * maxLengthPerLine + reservedForTrackTitles + 2 * semiquaverwidth;
+            //updates the total number of tracks in the song
+            totalInstruments = SongToDraw.GetTrackCount();
+            //sets the height of each line to 
+            lineHeight = (maxLinesAbove * 2 + 5) * lineGap;
+            //barsthisline is used to store the value to be added to bars per line, while the number of bars that fit is being calculated.
+            int barsThisLine = 0;
+            //current bar length is used to add to the length of the bar for extra features such as key sigs
+            int currentBarLength;
+            //current line length stores the cumulative total 
+            int currentLineLength = 0;
+            //loop through all bars to get the length required to display them and assign bars to lines.
+            for (int i = 0; i < SongToDraw.GetTotalBars(); i++)
+            {
+                //booleans to check whether the time signature or key signature needs to be displayed on this bar.
+                bool changeTimeSig = false;
+                bool changeKeySig = false;
+                //bar length defaults to the length of the bar in semiquavers with one semiquaver either side for padding
+                currentBarLength = SongToDraw.GetSigLength(i) + 2;
+                //if it is the first bar or the time signature changes, then the time sig must be changed, add space for that in bar. 
+                if ((i == 0) || (i > 0 && SongToDraw.TimeSigIsDifferentToPrevious(i)))
+                {
+                    currentBarLength += 1;
+                    changeTimeSig = true;
+                }
+                //if it is the first bar or the key signature changes (not supported)
+                if ((i == 0) || (i > 0 &&
+                    SongToDraw.GetKeySigs(i) != SongToDraw.GetKeySigs(i - 1)))
+                {
+                    //calculate the amount of space needed for the key signature (integer key signature multiplied by the space required for 1 symbol)
+                    //add that value to the length of the current bar
+                    //this is so you can have the naturals that appear to differentiate the "no sharps" c major.
+                    if (i != 0 && SongToDraw.GetKeySigs(i) == 0)
+                    {
+                        currentBarLength += (int)Math.Ceiling(Math.Abs(keySigWidthPerSign * SongToDraw.GetKeySigs(i - 1)));
+                    }
+                    else
+                    {
+                        currentBarLength += (int)Math.Ceiling(Math.Abs(keySigWidthPerSign * SongToDraw.GetKeySigs(i)));
+                    }
+                    //keysig has been displayed this bar.
+                    changeKeySig = true;
+                }
+                //if the length of this bar can fit on the current line
+                if (currentBarLength + currentLineLength <= maxLengthPerLine)
+                {
+                    //sets the starting x position of the bar to be 2 semiquavers after the previous one for padding
+                    barStarts[i] = currentLineLength + 2;
+                    //update the length of the current line
+                    currentLineLength += currentBarLength;
+                    //store the length of the bar in this array
+                    barLengths[i] = currentBarLength;
+                    //increase the number of bars to be drawn on this line.
+                    barsThisLine++;
+                }
+                //if the bar doesn't fit onto the current line, then add the previous line to the list and make a new one
+                else
+                {
+                    //set the start of the bar to be 2 padding semiquavers after the reserved space on the left.
+                    barStarts[i] = 2;
+                    //add the number of bars on the line (the ones up to but not including this bar) to the list of bars on each line 
+                    barsPerLine.Add(barsThisLine);
+                    //if it isn't already drawing the key signature, then it must do so
+                    if (!changeKeySig)
+                    {
+                        //add the space for the key signature with the same calculation as before
+                        currentBarLength += (int)Math.Ceiling(Math.Abs(keySigWidthPerSign * SongToDraw.GetKeySigs(i)));
+                        //make sure the start point of the bar is adjusted to fit later.
+                        changeKeySig = true;
+                    }
+                    //add the length of the bar to a fresh line length
+                    currentLineLength = currentBarLength;
+                    //add the length of the bar to the array
+                    barLengths[i] = currentBarLength;
+                    //reset the barsThisLine count
+                    barsThisLine = 1;
+                }
+                //if the key signature or time sig is displayed, move the start point of the notes in the bar to make room. Uses the same calculation as the one for bar length
+                //this must be done later as the bar start might be moved to a new line.
+                if (changeKeySig) barStarts[i] += (int)Math.Ceiling(Math.Abs(keySigWidthPerSign * SongToDraw.GetKeySigs(i)));
+                //this can be done as the previous line adds nothing in this instance. however it needs to add enough space to fit the natural signs to get the signature back to 0.
+                if (changeKeySig && i > 0 && SongToDraw.GetKeySigs(i) == 0) barStarts[i] += (int)Math.Ceiling(Math.Abs(keySigWidthPerSign * SongToDraw.GetKeySigs(i - 1)));
+                if (changeTimeSig) barStarts[i] += 1;
+            }
+            //add the final line to the list
+            barsPerLine.Add(barsThisLine);
+            //update total lines so it can be used to count in the loop
+            totalLines = barsPerLine.Count;
+            //initialise line starts with the number of lines required.
+            lineStarts = new int[totalLines];
+            //calculate the height of the canvas using the title height added to the total number of lines for each track x number of tracks x height of each line;
+            canvasHeight = extraHeight + (totalLines * lineHeight * totalInstruments);
+            //update the height of the canvas
+            canvas.Height = canvasHeight;
+        }
+
+        //a function to draw the clef where needed
+        private void DrawClef(ref Canvas canvas, int lineStart)
+        {
+            Image clef = new Image();
+            //if it's a treble clef
+            if (SongToDraw.GetTracks(currentInstrument).GetTreble())
+            {
+                //locate the treble image from the folder
+                clef.Source = new BitmapImage(new Uri(string.Concat(exePath, "\\source\\TrebleClef.png"), UriKind.Absolute));
+                //set top of image to be the top of the stave and a bit higher to look nice. 2 is fudge number
+                //must swirl around g
+                Canvas.SetTop(clef, lineStart - lineGap * 5 - 2);
+                //places the clef immediately after the padding
+                Canvas.SetLeft(clef, reservedForTrackTitles);
+                //makes the clef appropriate size
+                clef.Height = lineGap * 7.5;
+            }
+            //otherwise it is a bass clef
+            else
+            {
+                //find the source image in folder
+                clef.Source = new BitmapImage(new Uri(string.Concat(exePath, "\\source\\FClef.png"), UriKind.Absolute));
+                //make the bass clef appear in the middle of stave
+                //must colon around f
+                Canvas.SetTop(clef, lineStart - lineGap * 3.5);
+                //offset the clef a bit to the right so the spacing looks ok
+                Canvas.SetLeft(clef, reservedForTrackTitles + 10);
+                //bass clef is quite a bit smaller
+                clef.Height = lineGap * 3;
+            }
+            //add clef to canvas.
+            canvas.Children.Add(clef);
+        }
+
         //a function that loops through symbols in a bar, groups together notes as appropriate and calls other functions to draw stems, note heads and rests
         public void DrawBar(ref Canvas canvas, int bar, int track, int line)
         {
@@ -533,8 +553,6 @@ namespace Microcontroller_Music
             int beamStart = -1;
             //beamend is the last note in the beam. must be updated after every new note.
             int beamEnd = 0;
-            //last note was a tuplet is used so nothing beams into or out of a tuplet.
-            bool lastNoteWasATuplet = false;
             //thisbeam contains a semiquaver is to limit beams with semiquavers to 1 crotchet length.
             bool thisBeamContainsASemiQuaver = false;
             //keysigindex is the integer value of the keysignature of the bar. used to check whether accidental should be drawn
@@ -554,18 +572,8 @@ namespace Microcontroller_Music
                     {
                         thisBeamContainsASemiQuaver = true;
                     }
-                    //beam logic - if the last symbol was a tuplet they cannot beam
-                    //draw the previous beam and start a new one with the start and end index of that note.
-                    if (beamStart != -1 && lastNoteWasATuplet)
-                    {
-                        DrawStems(ref canvas, barStart, lineStart, track, bar, beamStart, beamEnd, lastNoteWasATuplet);
-                        beamStart = currentNote;
-                        beamEnd = currentNote;
-                        lastNoteWasATuplet = false;
-                        thisBeamContainsASemiQuaver = (note.GetLength() == 1);
-                    }
                     //central case. whether the beam should carry on or not 
-                    else if (beamStart != -1)
+                    if (beamStart != -1)
                     {
                         //this checks if the note is happening at the same time as a previous note, in which case no checks need to take place
                         if ((SongToDraw.GetTracks(track).GetBars(bar).GetNotes(beamEnd) as Note).GetStart() == note.GetStart())
@@ -575,7 +583,7 @@ namespace Microcontroller_Music
                         //this checks that if the note should be a single due to its length it is - if it is crotchet or longer it shouldn't beam
                         else if ((SongToDraw.GetTracks(track).GetBars(bar).GetNotes(beamEnd) as Note).GetLength() >= 4 || note.GetLength() >= 4)
                         {
-                            DrawStems(ref canvas, barStart, lineStart, track, bar, beamStart, beamEnd, lastNoteWasATuplet);
+                            DrawStems(ref canvas, barStart, lineStart, track, bar, beamStart, beamEnd);
                             beamStart = currentNote;
                             beamEnd = currentNote;
                             thisBeamContainsASemiQuaver = (note.GetLength() == 1);
@@ -586,7 +594,7 @@ namespace Microcontroller_Music
                         {
                             if (thisBeamContainsASemiQuaver && note.GetLength() + note.GetStart() - (SongToDraw.GetTracks(track).GetBars(bar).GetNotes(beamStart) as Note).GetStart() > 4)
                             {
-                                DrawStems(ref canvas, barStart, lineStart, track, bar, beamStart, beamEnd, lastNoteWasATuplet);
+                                DrawStems(ref canvas, barStart, lineStart, track, bar, beamStart, beamEnd);
                                 beamStart = currentNote;
                                 beamEnd = currentNote;
                                 thisBeamContainsASemiQuaver = (note.GetLength() == 1);
@@ -594,7 +602,7 @@ namespace Microcontroller_Music
                             //nice piece of logic here. if it ends after the midpoint or starts after the midpoint but not both --> it crosses the midpoint of the bar. big no no except in 3/4?
                             else if (note.GetLength() + note.GetStart() > midpoint ^ (SongToDraw.GetTracks(track).GetBars(bar).GetNotes(beamStart) as Note).GetStart() >= midpoint)
                             {
-                                DrawStems(ref canvas, barStart, lineStart, track, bar, beamStart, beamEnd, lastNoteWasATuplet);
+                                DrawStems(ref canvas, barStart, lineStart, track, bar, beamStart, beamEnd);
                                 beamStart = currentNote;
                                 beamEnd = currentNote;
                                 thisBeamContainsASemiQuaver = (note.GetLength() == 1);
@@ -622,43 +630,17 @@ namespace Microcontroller_Music
                     //beam logic
                     if (beamStart != -1)
                     {
-                        DrawStems(ref canvas, barStart, lineStart, track, bar, beamStart, beamEnd, lastNoteWasATuplet);
+                        DrawStems(ref canvas, barStart, lineStart, track, bar, beamStart, beamEnd);
                         beamStart = -1;
                         beamEnd = 0;
-                        lastNoteWasATuplet = false;
                     }
                     DrawRest(ref canvas, barStart, lineStart, track, bar, currentNote);
-                }
-                //handles the tuplet logic.
-                else
-                {
-                    //logic for beaming - if previous note was not a tuplet then they cannot beam, draw previous, start a new one
-                    if (beamStart != -1 && !lastNoteWasATuplet)
-                    {
-                        DrawStems(ref canvas, barStart, lineStart, track, bar, beamStart, beamEnd, false);
-                        beamStart = currentNote;
-                        beamEnd = currentNote;
-                        lastNoteWasATuplet = true;
-                    }
-                    //if last symbol was also a tuplet then they can continue on.
-                    else if (lastNoteWasATuplet)
-                    {
-                        beamEnd = currentNote;
-                    }
-                    //otherwise it is the first note in the bar and should be treated the same way notes are, except tuplet is true.
-                    else
-                    {
-                        beamStart = currentNote;
-                        beamEnd = currentNote;
-                        lastNoteWasATuplet = true;
-                    }
-                    //draw tuplet logic here...
                 }
             }
             //if there is an unfinished beam once the loop is over then draw that one.
             if (beamStart != -1)
             {
-                DrawStems(ref canvas, barStart, lineStart, track, bar, beamStart, beamEnd, lastNoteWasATuplet);
+                DrawStems(ref canvas, barStart, lineStart, track, bar, beamStart, beamEnd);
             }
         }
         #region separate functions for drawing certain important things
@@ -688,28 +670,36 @@ namespace Microcontroller_Music
         public bool CheckDrawAccidental(ref List<int> usedPitchAccidentals, ref List<int> usedPitches, int KeySigIndex, int pitch, int accidental)
         {
             bool drawAccidental = false;
+            //if the pitch is already present in the bar...
             if (usedPitches.Contains(pitch - accidental))
             {
+                //...and the accidental hasn't changed since it last appeared...
                 if (usedPitchAccidentals[usedPitches.IndexOf(pitch - accidental)] == accidental)
                 {
+                    //...draw the accidental
                     drawAccidental = false;
                 }
+                //...and the accidental has changed since it last appeared...
                 else
                 {
+                    //draw the accidental, and update the accidental stored for that pitch
                     usedPitchAccidentals[usedPitches.IndexOf(pitch - accidental)] = accidental;
                     drawAccidental = true;
                 }
             }
+            //if the pitch hasn't previously appeared
             else
             {
+                //add the pitch and accidental to their respecive lists
                 usedPitches.Add(pitch - accidental);
                 usedPitchAccidentals.Add(accidental);
-
+                //loop through the integer keysigs to see if the pitch matches one that should be sharpened or flattened normally
                 bool matchesKeySig = false;
                 for (int n = 1; n < 8; n++)
                 {
                     if (KeySigIndex >= n && (pitch - accidental) % 12 == (7 * n + 2) % 12)
                     {
+                        //if it should be sharpened and isnt in the song, draw the accidental
                         matchesKeySig = true;
                         if (accidental != 1)
                         {
@@ -718,6 +708,7 @@ namespace Microcontroller_Music
                     }
                     if (KeySigIndex <= (-1 * n) && (pitch - accidental) % 12 == Math.Abs((5 * n + 10) % 12))
                     {
+                        //if it should be flattened but isn't then draw the accidental.
                         matchesKeySig = true;
                         if (accidental != -1)
                         {
@@ -725,6 +716,7 @@ namespace Microcontroller_Music
                         }
                     }
                 }
+                //if the pitch doesn't match the key signature and isnt a natural then draw the accidental
                 if (!matchesKeySig)
                 {
                     if (accidental != 0)
@@ -735,298 +727,291 @@ namespace Microcontroller_Music
             }
             return drawAccidental;
         }
-        public void DrawStems(ref Canvas canvas, int barStart, int lineStart, int trackIndex, int barIndex, int startIndex, int endIndex, bool tuplet)
+
+        //draws the lines between groups of notes
+        public void DrawStems(ref Canvas canvas, int barStart, int lineStart, int trackIndex, int barIndex, int startIndex, int endIndex)
         {
-            if (tuplet)
+            int[] pitches = new int[endIndex - startIndex + 1];
+            int[] startPoints = new int[endIndex - startIndex + 1];
+            int[] lengths = new int[endIndex - startIndex + 1];
+            bool[] staccatos = new bool[endIndex - startIndex + 1];
+            int averagePitch = 0;
+            int highestPitch = -100;
+            int lowestPitch = 100;
+            int closestPitch = 100000000;
+            bool treble = SongToDraw.GetTracks(trackIndex).GetTreble();
+            for (int i = 0; i <= endIndex - startIndex; i++)
             {
-                //oooh fancy time for fancy people
-                //tuplets are in dire need of reconstruction which is fab. i'll get back to them one day but eh
-                //big plans; you'll love it but it does mean that a lot of the logic is going to be left until the end
-            }
-            else
-            {
-                int[] pitches = new int[endIndex - startIndex + 1];
-                int[] startPoints = new int[endIndex - startIndex + 1];
-                int[] lengths = new int[endIndex - startIndex + 1];
-                bool[] staccatos = new bool[endIndex - startIndex + 1];
-                int averagePitch = 0;
-                int highestPitch = -100;
-                int lowestPitch = 100;
-                int closestPitch = 100000000;
-                bool treble = SongToDraw.GetTracks(trackIndex).GetTreble();
-                for (int i = 0; i <= endIndex - startIndex; i++)
+                Note note = SongToDraw.GetTracks(trackIndex).GetBars(barIndex).GetNotes(startIndex + i) as Note;
+                pitches[i] = FindLineDifferenceFromMiddleC(note.GetPitch() - note.GetAccidental(), treble);
+                startPoints[i] = note.GetStart();
+                lengths[i] = note.GetLength();
+                staccatos[i] = note.GetStaccato();
+                averagePitch += pitches[i];
+                if (highestPitch < pitches[i] || highestPitch == -100)
                 {
-                    Note note = SongToDraw.GetTracks(trackIndex).GetBars(barIndex).GetNotes(startIndex + i) as Note;
-                    pitches[i] = FindLineDifferenceFromMiddleC(note.GetPitch() - note.GetAccidental(), treble);
-                    startPoints[i] = note.GetStart();
-                    lengths[i] = note.GetLength();
-                    staccatos[i] = note.GetStaccato();
-                    averagePitch += pitches[i];
-                    if (highestPitch < pitches[i] || highestPitch == -100)
-                    {
-                        highestPitch = pitches[i];
-                    }
-                    if (lowestPitch > pitches[i] || lowestPitch == 100)
-                    {
-                        lowestPitch = pitches[i];
-                    }
-                    if (Math.Abs(closestPitch) > Math.Abs(pitches[i] - 3))
-                    {
-                        closestPitch = pitches[i];
-                    }
+                    highestPitch = pitches[i];
                 }
-                averagePitch /= lengths.Length;
-                if (SongToDraw.GetTracks(trackIndex).GetBars(barIndex).GetNotes(startIndex).GetStart() == SongToDraw.GetTracks(trackIndex).GetBars(barIndex).GetNotes(endIndex).GetStart() && SongToDraw.GetTracks(trackIndex).GetBars(barIndex).GetNotes(endIndex).GetLength() < 16)
+                if (lowestPitch > pitches[i] || lowestPitch == 100)
                 {
-                    //note is a single and should have a flag
-                    //all this has to do is draw a line from the furthest from centre to an octave away from opposite note
-                    Line singleLine = new Line
-                    {
-                        Stroke = black,
-                        StrokeThickness = 2
-                    };
-                    Image flag = new Image
-                    {
-                        Height = 3 * lineGap
-                    };
-                    Ellipse staccatoCircle = new Ellipse
-                    {
-                        Fill = black,
-                        Height = lineGap * 0.4
-                    };
-                    staccatoCircle.Width = staccatoCircle.Height;
-                    Canvas.SetLeft(staccatoCircle, barStart + semiquaverwidth * startPoints[0] + semiquaverwidth / 2 - staccatoCircle.Width / 4);
-                    if (highestPitch < 3 || Math.Abs(highestPitch - 3) < Math.Abs(lowestPitch - 3))
-                    {
-                        //stem goes up - draw line on right of notes; draw line from middle of lowest to an octave from highest -- unless lowest is more than an octave from middle line (3)
-                        singleLine.X1 = barStart + semiquaverwidth * startPoints[0] + noteHeadWidth + 1 + (semiquaverwidth - noteHeadWidth) / 2;
-                        singleLine.X2 = singleLine.X1;
-                        singleLine.Y1 = lineStart - (lowestPitch) * lineGap / 2;
-                        singleLine.Y2 = (Math.Abs(highestPitch - 3) > 7) ? lineStart - lineGap : lineStart - (highestPitch + 7) * lineGap / 2;
-                        Canvas.SetTop(flag, singleLine.Y2);
-                        if (lengths[0] < 4)
-                        {
-                            double flagLen = (Math.Log(lengths[0], 2) % 1 != 0) ? lengths[0] / 1.5 : lengths[0];
-                            flag.Source = new BitmapImage(new Uri(string.Concat(exePath, "\\source\\up" + flagLen + "flag.png"), UriKind.Absolute));
-                        }
-                        if (staccatos[0])
-                        {
-                            Canvas.SetTop(staccatoCircle, lineStart - (lowestPitch - 1) * lineGap / 2 + lineGap / 4);
-                            canvas.Children.Add(staccatoCircle);
-                        }
-                        lastBeamUp = true;
-                    }
-                    else
-                    {
-                        //stem goes down
-                        singleLine.X1 = barStart + semiquaverwidth * startPoints[0] + 4 + (semiquaverwidth - noteHeadWidth) / 2;
-                        singleLine.X2 = singleLine.X1;
-                        singleLine.Y1 = lineStart - (highestPitch) * lineGap / 2;
-                        singleLine.Y2 = (Math.Abs(lowestPitch - 3) > 7) ? lineStart - lineGap - lineGap / 2 : lineStart - (lowestPitch - 7) * lineGap / 2;
-                        Canvas.SetTop(flag, singleLine.Y2 - 3 * lineGap);
-                        if (lengths[0] < 4)
-                        {
-                            double flagLen = (Math.Log(lengths[0], 2) % 1 != 0) ? lengths[0] / 1.5 : lengths[0];
-                            flag.Source = new BitmapImage(new Uri(string.Concat(exePath, "\\source\\down" + flagLen + "flag.png"), UriKind.Absolute));
-                        }
-                        if (staccatos[0])
-                        {
-                            Canvas.SetTop(staccatoCircle, lineStart - (highestPitch + 2) * lineGap / 2 - lineGap / 4);
-                            canvas.Children.Add(staccatoCircle);
-                        }
-                        lastBeamUp = false;
-                    }
-                    Canvas.SetLeft(flag, singleLine.X1);
-                    canvas.Children.Add(singleLine);
+                    lowestPitch = pitches[i];
+                }
+                if (Math.Abs(closestPitch) > Math.Abs(pitches[i] - 3))
+                {
+                    closestPitch = pitches[i];
+                }
+            }
+            averagePitch /= lengths.Length;
+            if (SongToDraw.GetTracks(trackIndex).GetBars(barIndex).GetNotes(startIndex).GetStart() == SongToDraw.GetTracks(trackIndex).GetBars(barIndex).GetNotes(endIndex).GetStart() && SongToDraw.GetTracks(trackIndex).GetBars(barIndex).GetNotes(endIndex).GetLength() < 16)
+            {
+                //note is a single and should have a flag
+                //all this has to do is draw a line from the furthest from centre to an octave away from opposite note
+                Line singleLine = new Line
+                {
+                    Stroke = black,
+                    StrokeThickness = 2
+                };
+                Image flag = new Image
+                {
+                    Height = 3 * lineGap
+                };
+                Ellipse staccatoCircle = new Ellipse
+                {
+                    Fill = black,
+                    Height = lineGap * 0.4
+                };
+                staccatoCircle.Width = staccatoCircle.Height;
+                Canvas.SetLeft(staccatoCircle, barStart + semiquaverwidth * startPoints[0] + semiquaverwidth / 2 - staccatoCircle.Width / 4);
+                if (highestPitch < 3 || Math.Abs(highestPitch - 3) < Math.Abs(lowestPitch - 3))
+                {
+                    //stem goes up - draw line on right of notes; draw line from middle of lowest to an octave from highest -- unless lowest is more than an octave from middle line (3)
+                    singleLine.X1 = barStart + semiquaverwidth * startPoints[0] + noteHeadWidth + 1 + (semiquaverwidth - noteHeadWidth) / 2;
+                    singleLine.X2 = singleLine.X1;
+                    singleLine.Y1 = lineStart - (lowestPitch) * lineGap / 2;
+                    singleLine.Y2 = (Math.Abs(highestPitch - 3) > 7) ? lineStart - lineGap : lineStart - (highestPitch + 7) * lineGap / 2;
+                    Canvas.SetTop(flag, singleLine.Y2);
                     if (lengths[0] < 4)
                     {
-                        canvas.Children.Add(flag);
+                        double flagLen = (Math.Log(lengths[0], 2) % 1 != 0) ? lengths[0] / 1.5 : lengths[0];
+                        flag.Source = new BitmapImage(new Uri(string.Concat(exePath, "\\source\\up" + flagLen + "flag.png"), UriKind.Absolute));
                     }
-                }
-                else if (SongToDraw.GetTracks(trackIndex).GetBars(barIndex).GetNotes(endIndex).GetLength() < 16)
-                {
-                    //this is a group of notes and should be treated so
-                    //it is ALSO the reason that i killed off multiple melody lines. 
-
-                    //step by step:
-                    //calculate least squares regression gradient of beam using startpoints and noteheights
-                    double numerator = 0;
-                    double denominator = 0;
-                    double averageStart = (startPoints[0] + startPoints[startPoints.Length - 1]) / 2;
-                    for (int i = 0; i <= endIndex - startIndex; i++)
+                    if (staccatos[0])
                     {
-                        numerator += (startPoints[i] - averageStart) * (pitches[i] - averagePitch);
-                        denominator += Math.Pow((startPoints[i] - averageStart), 2);
+                        Canvas.SetTop(staccatoCircle, lineStart - (lowestPitch - 1) * lineGap / 2 + lineGap / 4);
+                        canvas.Children.Add(staccatoCircle);
                     }
-                    double beamGradient = -1 * numerator / denominator;
-                    //calculate if notes go above or below using average (and a fight between min and max notes to see if they need to go above or below - you'll see; it's gonna be great)
-                    if (Math.Abs(highestPitch - averagePitch) > 6 ^ Math.Abs(lowestPitch - averagePitch) > 6) //another xor but we actually need to know which it is
-                    {
-                        lastBeamUp = Math.Abs(lowestPitch - averagePitch) > 6;
-                    }
-                    else
-                    {
-                        lastBeamUp = (averagePitch <= 3);
-                    }
-                    //calculate height of beam using average distance from gradient and min (target 3.5, min 2?)
-                    double beamDifference = averagePitch + averageStart * beamGradient;
-                    beamDifference = (lastBeamUp) ? beamDifference + 7 : beamDifference - 7;
-                    for (int i = 0; i < startPoints.Length; i++)
-                    {
-                        if (lastBeamUp && beamDifference - beamGradient * startPoints[i] - pitches[i] < 6)
-                        {
-                            beamDifference = pitches[i] + 6 + startPoints[i] * beamGradient;
-                        }
-                        else if (!lastBeamUp && pitches[i] - (beamDifference - beamGradient * startPoints[i]) < 6)
-                        {
-                            beamDifference = pitches[i] - 6 + startPoints[i] * beamGradient;
-                        }
-                    }
-                    //beamDifference = defaultbeamStart;
-                    //draw the lines
-                    Polygon beam = new Polygon
-                    {
-                        Fill = black
-                    };
-                    Point p1;
-                    Point p2;
-                    int lineStartFromSemiStart;
-                    int beamUpAdjustment = 0;
-                    if (lastBeamUp)
-                    {
-                        p2 = new Point(barStart + startPoints[startPoints.Length - 1] * semiquaverwidth + noteHeadWidth + 1 + (semiquaverwidth - noteHeadWidth) / 2, lineStart - (beamDifference - beamGradient * startPoints[startPoints.Length - 1]) * lineGap / 2);
-                        p1 = new Point(barStart + startPoints[0] * semiquaverwidth + noteHeadWidth + 1 + (semiquaverwidth - noteHeadWidth) / 2, lineStart - (beamDifference - beamGradient * startPoints[0]) * lineGap / 2);
-                        lineStartFromSemiStart = noteHeadWidth + 1 + (semiquaverwidth - noteHeadWidth) / 2;
-                        beamUpAdjustment = 1;
-                    }
-                    else
-                    {
-                        p1 = new Point(barStart + startPoints[0] * semiquaverwidth + 4 + (semiquaverwidth - noteHeadWidth) / 2, lineStart - (beamDifference - beamGradient * startPoints[0]) * lineGap / 2);
-                        p2 = new Point(barStart + startPoints[startPoints.Length - 1] * semiquaverwidth + 4 + (semiquaverwidth - noteHeadWidth) / 2, lineStart - (beamDifference - beamGradient * startPoints[startPoints.Length - 1]) * lineGap / 2);
-                        lineStartFromSemiStart = 4 + (semiquaverwidth - noteHeadWidth) / 2;
-                    }
-                    beam.Points.Add(p1);
-                    beam.Points.Add(p2);
-                    beam.Points.Add(new Point(p2.X, p2.Y - lineGap / 2));
-                    beam.Points.Add(new Point(p1.X, p1.Y - lineGap / 2));
-                    canvas.Children.Add(beam);
-                    bool previousNoteWasSemi = false;
-                    for (int i = 0; i <= endIndex - startIndex; i++)
-                    {
-                        //draw note stems
-                        Line stem = new Line
-                        {
-                            Stroke = black,
-                            StrokeThickness = 2,
-                            X1 = barStart + startPoints[i] * semiquaverwidth + lineStartFromSemiStart
-                        };
-                        stem.X2 = stem.X1;
-                        stem.Y1 = lineStart - (pitches[i]) * lineGap / 2;
-                        stem.Y2 = lineStart - (beamDifference - beamGradient * startPoints[i] + beamUpAdjustment) * lineGap / 2;
-                        canvas.Children.Add(stem);
-                        //handle staccatos
-                        if (staccatos[i])
-                        {
-                            Ellipse staccatoCircle = new Ellipse
-                            {
-                                Fill = black,
-                                Height = lineGap * 0.4
-                            };
-                            staccatoCircle.Width = staccatoCircle.Height;
-                            Canvas.SetLeft(staccatoCircle, barStart + semiquaverwidth * startPoints[i] + semiquaverwidth / 2 - staccatoCircle.Width / 4);
-                            if (lastBeamUp && (i == 0 || startPoints[i - 1] != startPoints[i]))
-                            {
-                                //draw a staccato below
-                                Canvas.SetTop(staccatoCircle, lineStart - (pitches[i] - 1) * lineGap / 2 + lineGap / 4);
-                                canvas.Children.Add(staccatoCircle);
-
-                            }
-                            if (!lastBeamUp && (i == startPoints.Length - 1 || startPoints[i + 1] != startPoints[i]))
-                            {
-                                //draw staccato above
-                                Canvas.SetTop(staccatoCircle, lineStart - (pitches[i] + 2) * lineGap / 2 - lineGap / 4);
-                                canvas.Children.Add(staccatoCircle);
-                            }
-                        }
-                        //add a second line for semiquavers and notes after dots.
-                        double semiBottomY = stem.Y2;
-                        semiBottomY = (lastBeamUp) ? semiBottomY + lineGap * 0.75 : semiBottomY - lineGap * 0.75;
-                        double semiTopY = (lastBeamUp) ? semiBottomY + lineGap / 2 : semiBottomY - lineGap / 2;
-                        //handles beaming to the left for instances where there is nothing to the right to prove it is a semiquaver
-                        if (lengths[i] == 1 && startPoints[i] == startPoints[startPoints.Length - 1])
-                        {
-                            Polygon semiBeam = new Polygon
-                            {
-                                Fill = black
-                            };
-                            semiBeam.Points.Add(new Point(stem.X1, semiBottomY));
-                            semiBeam.Points.Add(new Point(stem.X1, semiTopY));
-                            semiBeam.Points.Add(new Point(stem.X1 - noteHeadWidth, semiTopY - ((noteHeadWidth / (double)semiquaverwidth) * beamGradient) * lineGap / 2));
-                            semiBeam.Points.Add(new Point(stem.X1 - noteHeadWidth, semiBottomY - ((noteHeadWidth / (double)semiquaverwidth) * beamGradient) * lineGap / 2));
-                            canvas.Children.Add(semiBeam);
-                        }
-                        //handles the regular case where 2 or more semiuavers are grouped
-                        else if (lengths[i] == 1 && startPoints[i + 1] != startPoints[i] && lengths[i + 1] == 1)
-                        {
-                            Polygon semiBeamR = new Polygon
-                            {
-                                Fill = black
-                            };
-                            semiBeamR.Points.Add(new Point(stem.X1, semiBottomY));
-                            semiBeamR.Points.Add(new Point(stem.X1, semiTopY));
-                            if (lengths[i + 1] < 2)
-                            {
-                                semiBeamR.Points.Add(new Point(stem.X1 + semiquaverwidth, semiTopY + (beamGradient) * lineGap / 2));
-                                semiBeamR.Points.Add(new Point(stem.X1 + semiquaverwidth, semiBottomY + (beamGradient) * lineGap / 2));
-                            }
-                            else
-                            {
-                                semiBeamR.Points.Add(new Point(stem.X1 + noteHeadWidth, semiTopY + ((noteHeadWidth / (double)semiquaverwidth) * beamGradient) * lineGap / 2));
-                                semiBeamR.Points.Add(new Point(stem.X1 + noteHeadWidth, semiBottomY + ((noteHeadWidth / (double)semiquaverwidth) * beamGradient) * lineGap / 2));
-                            }
-                            canvas.Children.Add(semiBeamR);
-                        }
-                        //handles when the note to the left isn't a semiquaver but neither is the one to the right so it has to go half to the right to 
-                        else if (!previousNoteWasSemi && lengths[i] == 1 && startPoints[i + 1] != startPoints[i] && lengths[i + 1] != 1)
-                        {
-                            Polygon semiBeamHalf = new Polygon
-                            {
-                                Fill = black
-                            };
-                            semiBeamHalf.Points.Add(new Point(stem.X1, semiBottomY));
-                            semiBeamHalf.Points.Add(new Point(stem.X1, semiTopY));
-                            semiBeamHalf.Points.Add(new Point(stem.X1 + noteHeadWidth, semiTopY + ((noteHeadWidth / (double)semiquaverwidth) * beamGradient) * lineGap / 2));
-                            semiBeamHalf.Points.Add(new Point(stem.X1 + noteHeadWidth, semiBottomY + ((noteHeadWidth / (double)semiquaverwidth) * beamGradient) * lineGap / 2));
-                            canvas.Children.Add(semiBeamHalf);
-                        }
-                        if (lengths[i] == 0 && i < lengths.Length - 1 && startPoints[i + 1] != startPoints[i])
-                        {
-                            previousNoteWasSemi = true;
-                        }
-                        else if (lengths[i] != 0)
-                        {
-                            previousNoteWasSemi = false;
-                        }
-                    }
+                    lastBeamUp = true;
                 }
                 else
                 {
-                    //handles staccatos for semibreves.
-                    Ellipse staccatoCircle = new Ellipse
+                    //stem goes down
+                    singleLine.X1 = barStart + semiquaverwidth * startPoints[0] + 4 + (semiquaverwidth - noteHeadWidth) / 2;
+                    singleLine.X2 = singleLine.X1;
+                    singleLine.Y1 = lineStart - (highestPitch) * lineGap / 2;
+                    singleLine.Y2 = (Math.Abs(lowestPitch - 3) > 7) ? lineStart - lineGap - lineGap / 2 : lineStart - (lowestPitch - 7) * lineGap / 2;
+                    Canvas.SetTop(flag, singleLine.Y2 - 3 * lineGap);
+                    if (lengths[0] < 4)
                     {
-                        Fill = black,
-                        Height = lineGap * 0.4
-                    };
-                    staccatoCircle.Width = staccatoCircle.Height;
-                    Canvas.SetLeft(staccatoCircle, barStart + semiquaverwidth * startPoints[0] + semiquaverwidth / 2 - staccatoCircle.Width / 4 - 3);
-                    if (staccatos[startPoints.Length - 1])
+                        double flagLen = (Math.Log(lengths[0], 2) % 1 != 0) ? lengths[0] / 1.5 : lengths[0];
+                        flag.Source = new BitmapImage(new Uri(string.Concat(exePath, "\\source\\down" + flagLen + "flag.png"), UriKind.Absolute));
+                    }
+                    if (staccatos[0])
                     {
-                        Canvas.SetTop(staccatoCircle, lineStart - (lowestPitch - 1.5) * lineGap / 2);
+                        Canvas.SetTop(staccatoCircle, lineStart - (highestPitch + 2) * lineGap / 2 - lineGap / 4);
                         canvas.Children.Add(staccatoCircle);
+                    }
+                    lastBeamUp = false;
+                }
+                Canvas.SetLeft(flag, singleLine.X1);
+                canvas.Children.Add(singleLine);
+                if (lengths[0] < 4)
+                {
+                    canvas.Children.Add(flag);
+                }
+            }
+            else if (SongToDraw.GetTracks(trackIndex).GetBars(barIndex).GetNotes(endIndex).GetLength() < 16)
+            {
+                //this is a group of notes and should be treated so
+
+                //step by step:
+                //calculate least squares regression gradient of beam using startpoints and noteheights
+                double numerator = 0;
+                double denominator = 0;
+                double averageStart = (startPoints[0] + startPoints[startPoints.Length - 1]) / 2;
+                for (int i = 0; i <= endIndex - startIndex; i++)
+                {
+                    numerator += (startPoints[i] - averageStart) * (pitches[i] - averagePitch);
+                    denominator += Math.Pow((startPoints[i] - averageStart), 2);
+                }
+                double beamGradient = -1 * numerator / denominator;
+                //calculate if notes go above or below using average (and a fight between min and max notes to see if they need to go above or below - you'll see; it's gonna be great)
+                if (Math.Abs(highestPitch - averagePitch) > 6 ^ Math.Abs(lowestPitch - averagePitch) > 6) //another xor but we actually need to know which it is
+                {
+                    lastBeamUp = Math.Abs(lowestPitch - averagePitch) > 6;
+                }
+                else
+                {
+                    lastBeamUp = (averagePitch <= 3);
+                }
+                //calculate height of beam using average distance from gradient and min (target 3.5, min 2?)
+                double beamDifference = averagePitch + averageStart * beamGradient;
+                beamDifference = (lastBeamUp) ? beamDifference + 7 : beamDifference - 7;
+                for (int i = 0; i < startPoints.Length; i++)
+                {
+                    if (lastBeamUp && beamDifference - beamGradient * startPoints[i] - pitches[i] < 6)
+                    {
+                        beamDifference = pitches[i] + 6 + startPoints[i] * beamGradient;
+                    }
+                    else if (!lastBeamUp && pitches[i] - (beamDifference - beamGradient * startPoints[i]) < 6)
+                    {
+                        beamDifference = pitches[i] - 6 + startPoints[i] * beamGradient;
+                    }
+                }
+                //beamDifference = defaultbeamStart;
+                //draw the lines
+                Polygon beam = new Polygon
+                {
+                    Fill = black
+                };
+                Point p1;
+                Point p2;
+                int lineStartFromSemiStart;
+                int beamUpAdjustment = 0;
+                if (lastBeamUp)
+                {
+                    p2 = new Point(barStart + startPoints[startPoints.Length - 1] * semiquaverwidth + noteHeadWidth + 1 + (semiquaverwidth - noteHeadWidth) / 2, lineStart - (beamDifference - beamGradient * startPoints[startPoints.Length - 1]) * lineGap / 2);
+                    p1 = new Point(barStart + startPoints[0] * semiquaverwidth + noteHeadWidth + 1 + (semiquaverwidth - noteHeadWidth) / 2, lineStart - (beamDifference - beamGradient * startPoints[0]) * lineGap / 2);
+                    lineStartFromSemiStart = noteHeadWidth + 1 + (semiquaverwidth - noteHeadWidth) / 2;
+                    beamUpAdjustment = 1;
+                }
+                else
+                {
+                    p1 = new Point(barStart + startPoints[0] * semiquaverwidth + 4 + (semiquaverwidth - noteHeadWidth) / 2, lineStart - (beamDifference - beamGradient * startPoints[0]) * lineGap / 2);
+                    p2 = new Point(barStart + startPoints[startPoints.Length - 1] * semiquaverwidth + 4 + (semiquaverwidth - noteHeadWidth) / 2, lineStart - (beamDifference - beamGradient * startPoints[startPoints.Length - 1]) * lineGap / 2);
+                    lineStartFromSemiStart = 4 + (semiquaverwidth - noteHeadWidth) / 2;
+                }
+                beam.Points.Add(p1);
+                beam.Points.Add(p2);
+                beam.Points.Add(new Point(p2.X, p2.Y - lineGap / 2));
+                beam.Points.Add(new Point(p1.X, p1.Y - lineGap / 2));
+                canvas.Children.Add(beam);
+                bool previousNoteWasSemi = false;
+                for (int i = 0; i <= endIndex - startIndex; i++)
+                {
+                    //draw note stems
+                    Line stem = new Line
+                    {
+                        Stroke = black,
+                        StrokeThickness = 2,
+                        X1 = barStart + startPoints[i] * semiquaverwidth + lineStartFromSemiStart
+                    };
+                    stem.X2 = stem.X1;
+                    stem.Y1 = lineStart - (pitches[i]) * lineGap / 2;
+                    stem.Y2 = lineStart - (beamDifference - beamGradient * startPoints[i] + beamUpAdjustment) * lineGap / 2;
+                    canvas.Children.Add(stem);
+                    //handle staccatos
+                    if (staccatos[i])
+                    {
+                        Ellipse staccatoCircle = new Ellipse
+                        {
+                            Fill = black,
+                            Height = lineGap * 0.4
+                        };
+                        staccatoCircle.Width = staccatoCircle.Height;
+                        Canvas.SetLeft(staccatoCircle, barStart + semiquaverwidth * startPoints[i] + semiquaverwidth / 2 - staccatoCircle.Width / 4);
+                        if (lastBeamUp && (i == 0 || startPoints[i - 1] != startPoints[i]))
+                        {
+                            //draw a staccato below
+                            Canvas.SetTop(staccatoCircle, lineStart - (pitches[i] - 1) * lineGap / 2 + lineGap / 4);
+                            canvas.Children.Add(staccatoCircle);
+
+                        }
+                        if (!lastBeamUp && (i == startPoints.Length - 1 || startPoints[i + 1] != startPoints[i]))
+                        {
+                            //draw staccato above
+                            Canvas.SetTop(staccatoCircle, lineStart - (pitches[i] + 2) * lineGap / 2 - lineGap / 4);
+                            canvas.Children.Add(staccatoCircle);
+                        }
+                    }
+                    //add a second line for semiquavers and notes after dots.
+                    double semiBottomY = stem.Y2;
+                    semiBottomY = (lastBeamUp) ? semiBottomY + lineGap * 0.75 : semiBottomY - lineGap * 0.75;
+                    double semiTopY = (lastBeamUp) ? semiBottomY + lineGap / 2 : semiBottomY - lineGap / 2;
+                    //handles beaming to the left for instances where there is nothing to the right to prove it is a semiquaver
+                    if (lengths[i] == 1 && startPoints[i] == startPoints[startPoints.Length - 1])
+                    {
+                        Polygon semiBeam = new Polygon
+                        {
+                            Fill = black
+                        };
+                        semiBeam.Points.Add(new Point(stem.X1, semiBottomY));
+                        semiBeam.Points.Add(new Point(stem.X1, semiTopY));
+                        semiBeam.Points.Add(new Point(stem.X1 - noteHeadWidth, semiTopY - ((noteHeadWidth / (double)semiquaverwidth) * beamGradient) * lineGap / 2));
+                        semiBeam.Points.Add(new Point(stem.X1 - noteHeadWidth, semiBottomY - ((noteHeadWidth / (double)semiquaverwidth) * beamGradient) * lineGap / 2));
+                        canvas.Children.Add(semiBeam);
+                    }
+                    //handles the regular case where 2 or more semiuavers are grouped
+                    else if (lengths[i] == 1 && startPoints[i + 1] != startPoints[i] && lengths[i + 1] == 1)
+                    {
+                        Polygon semiBeamR = new Polygon
+                        {
+                            Fill = black
+                        };
+                        semiBeamR.Points.Add(new Point(stem.X1, semiBottomY));
+                        semiBeamR.Points.Add(new Point(stem.X1, semiTopY));
+                        if (lengths[i + 1] < 2)
+                        {
+                            semiBeamR.Points.Add(new Point(stem.X1 + semiquaverwidth, semiTopY + (beamGradient) * lineGap / 2));
+                            semiBeamR.Points.Add(new Point(stem.X1 + semiquaverwidth, semiBottomY + (beamGradient) * lineGap / 2));
+                        }
+                        else
+                        {
+                            semiBeamR.Points.Add(new Point(stem.X1 + noteHeadWidth, semiTopY + ((noteHeadWidth / (double)semiquaverwidth) * beamGradient) * lineGap / 2));
+                            semiBeamR.Points.Add(new Point(stem.X1 + noteHeadWidth, semiBottomY + ((noteHeadWidth / (double)semiquaverwidth) * beamGradient) * lineGap / 2));
+                        }
+                        canvas.Children.Add(semiBeamR);
+                    }
+                    //handles when the note to the left isn't a semiquaver but neither is the one to the right so it has to go half to the right to 
+                    else if (!previousNoteWasSemi && lengths[i] == 1 && startPoints[i + 1] != startPoints[i] && lengths[i + 1] != 1)
+                    {
+                        Polygon semiBeamHalf = new Polygon
+                        {
+                            Fill = black
+                        };
+                        semiBeamHalf.Points.Add(new Point(stem.X1, semiBottomY));
+                        semiBeamHalf.Points.Add(new Point(stem.X1, semiTopY));
+                        semiBeamHalf.Points.Add(new Point(stem.X1 + noteHeadWidth, semiTopY + ((noteHeadWidth / (double)semiquaverwidth) * beamGradient) * lineGap / 2));
+                        semiBeamHalf.Points.Add(new Point(stem.X1 + noteHeadWidth, semiBottomY + ((noteHeadWidth / (double)semiquaverwidth) * beamGradient) * lineGap / 2));
+                        canvas.Children.Add(semiBeamHalf);
+                    }
+                    if (lengths[i] == 0 && i < lengths.Length - 1 && startPoints[i + 1] != startPoints[i])
+                    {
+                        previousNoteWasSemi = true;
+                    }
+                    else if (lengths[i] != 0)
+                    {
+                        previousNoteWasSemi = false;
                     }
                 }
             }
+            else
+            {
+                //handles staccatos for semibreves.
+                Ellipse staccatoCircle = new Ellipse
+                {
+                    Fill = black,
+                    Height = lineGap * 0.4
+                };
+                staccatoCircle.Width = staccatoCircle.Height;
+                Canvas.SetLeft(staccatoCircle, barStart + semiquaverwidth * startPoints[0] + semiquaverwidth / 2 - staccatoCircle.Width / 4 - 3);
+                if (staccatos[startPoints.Length - 1])
+                {
+                    Canvas.SetTop(staccatoCircle, lineStart - (lowestPitch - 1.5) * lineGap / 2);
+                    canvas.Children.Add(staccatoCircle);
+                }
+            }
         }
+
         //regarding the parameters:
         //canvas so you can add things to the image
         //note so that it can see everything it needs to draw it. tie will be used to draw the lines, but ones that bridge over bars WILL be a problem

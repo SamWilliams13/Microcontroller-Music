@@ -7,8 +7,11 @@
         mc:Ignorable="d"
         Title="BPMChange" Height="125.271" Width="270.946">
     <Grid Margin="0,0,2,8">
+        <!--Label to tell user to enter new bpm in textbox-->
         <Label x:Name="label" Content="New BPM: " HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
+        <!--textbox for bpm entry-->
         <TextBox x:Name="textBox" HorizontalAlignment="Left" Height="26" Margin="82,10,0,0" TextWrapping="Wrap" Text="120" VerticalAlignment="Top" Width="160"/>
+        <!--ok button to close window-->
         <Button x:Name="button" Content="OK" HorizontalAlignment="Left" Margin="167,51,0,0" VerticalAlignment="Top" Width="75" Click="Button_Click"/>
 
     </Grid>

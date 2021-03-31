@@ -22,7 +22,7 @@ namespace Microcontroller_Music
         //name of the track
         private readonly string Name;
         [DataMember]
-        private static readonly string[] CheckFitErrors = { "This process works", "The note is too long to fit in the bar", "A note already exists that means the new note cannot be added", "The note would cause a gap to exist in the bar", "There is not enough space to store this triplet", "The object is a rest and therefore cannot be changed in this way", "Multiple melody lines are not allowed." };
+        private static readonly string[] CheckFitErrors = { "This process works", "The note is too long to fit in the bar", "A note already exists that means the new note cannot be added", "The note would cause a gap to exist in the bar", "", "The object is a rest and therefore cannot be changed in this way", "Multiple melody lines are not allowed." };
         //used as a return value when checking the fit in a bar
         private int tempCheck;
         [DataMember]
@@ -68,7 +68,7 @@ namespace Microcontroller_Music
         }
 
         //deletes the chosen note, selected by findnote.
-        public void DeleteNote(int barIndex, int noteIndex)
+        public void DeleteNote(int barIndex, int noteIndex, int newLength = -1)
         {
             if (Bars[barIndex].GetTie(noteIndex) != null)
             {
@@ -78,7 +78,7 @@ namespace Microcontroller_Music
             {
                 RemoveConnection(barIndex, noteIndex, false);
             }
-            Bars[barIndex].DeleteNote(noteIndex);
+            Bars[barIndex].DeleteNote(noteIndex, (barIndex != Bars.Count - 1), newLength);
         }
 
         //changes the time signature of the bar.
@@ -205,7 +205,7 @@ namespace Microcontroller_Music
                 NewBar();
             }
             Bars[barIndex].SortNotes();
-            Bars[barIndex].FixSpacing(false);
+            Bars[barIndex].FixSpacing(barIndex != Bars.Count - 1);
 
         }
 
@@ -239,23 +239,25 @@ namespace Microcontroller_Music
             {
                 if (Bars[barIndex].GetMaxLength() > newLength)
                 {
-
-                    bool noteDeleted;
-                    do
+                    if (MainWindow.GenerateYesNoDialog("Confirm action", "By shortening the bar, you will delete any notes inside it which no longer fit. Are you sure you want to do this?"))
                     {
-                        noteDeleted = false;
-                        for (int i = 0; i < Bars[barIndex].GetNoteCount(); i++)
+                        bool noteDeleted;
+                        do
                         {
-                            if (Bars[barIndex].GetNoteEnd(i) > newLength)
+                            noteDeleted = false;
+                            for (int i = 0; i < Bars[barIndex].GetNoteCount(); i++)
                             {
-                                DeleteNote(barIndex, i);
-                                noteDeleted = true;
+                                if (Bars[barIndex].GetNoteEnd(i) > newLength)
+                                {
+                                    DeleteNote(barIndex, i, newLength);
+                                    noteDeleted = true;
+                                }
                             }
-                        }
-                    } while (noteDeleted == true);
-                    Bars[barIndex].ChangeLength(newLength);
+                        } while (noteDeleted == true);
+                        Bars[barIndex].ChangeTimeSig(newLength);
+                    }
                 }
-                else Bars[barIndex].ChangeLength(newLength);
+                else Bars[barIndex].ChangeTimeSig(newLength);
             }
         }
         #endregion

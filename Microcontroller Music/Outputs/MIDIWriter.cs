@@ -83,7 +83,7 @@ namespace Microcontroller_Music
                     foreach (Symbol s in barNotes)
                     {
                         //only play the note if it is not the second part of a tie or slur - or notes will be duplicated.
-                        if ((s is Note && (s as Note).GetTiedTo() == null) || (s is Tuplet && (s as Tuplet).GetTiedTo() == null))
+                        if (s is Note && (s as Note).GetTiedTo() == null)
                         {
                             //call notehandler. give it the symbol, tell it there are no previous note lengths tied to it, start point in bar, total length
                             //of previous bars, the channel of the track
@@ -127,7 +127,7 @@ namespace Microcontroller_Music
         //the channel of the track to output to.
         public void NoteHandler(Symbol s, float noteLength, float start, float total, Channel channel)
         {
-            //check what type of symbol s is - tuplets require some more processing
+            //check what type of symbol s is
             if (s is Note)
             {
                 //if the note does not tie or slur into anything else
@@ -137,9 +137,7 @@ namespace Microcontroller_Music
                     MakeNote(s as Note, channel, total, start, noteLength, s.GetLength(), false);
                 }
                 //otherwise if the note is tied to something of the same pitch as it - this line is long as it has to handle things as different types
-                else if (((s as Note).GetTie() is Note && (s as Note).GetPitch() == ((s as Note).GetTie() as Note).GetPitch()) ||
-                    ((s as Note).GetTie() is Tuplet && ((s as Note).GetTie() as Tuplet).GetComponent(0) is Note &&
-                    (s as Note).GetPitch() == (((s as Note).GetTie() as Tuplet).GetComponent(0) as Note).GetPitch()))
+                else if ((s as Note).GetTie() is Note && (s as Note).GetPitch() == ((s as Note).GetTie() as Note).GetPitch())
                 {
                     //call notehandler again but increase the length of previous notes to reflect this one
                     NoteHandler((s as Note).GetTie(), s.GetLength() + noteLength, start, total, channel);
@@ -153,82 +151,6 @@ namespace Microcontroller_Music
                     //this requires the start point of the note to be handled here, as the start point stored in the note will not be accurate if the notes slur
                     //over the end of a bar.
                     NoteHandler((s as Note).GetTie(), 0F, start + s.GetLength() + noteLength, total, channel);
-                }
-            }
-            //this could be an else because rests are removed by an earlier check, but better safe than sorry
-            else if (s is Tuplet)
-            {
-                //make a variable for the tuplet so that (s as Tuplet) doesn't appear everywhere - uses minimal extra memory
-                Tuplet t = s as Tuplet;
-                //calculates the length of one note in a tuplet, as this doesn't exist in the actual structure as it could be decimal
-                float tupLen = (float)t.GetLength() / (float)t.GetNumberOfNotes();
-                //loop through all notes in the tuplet except for the last one. this doesn't care about TiedTo as it won't duplicate notes like that
-                for (int i = 0; i < (t).GetNumberOfNotes() - 1; i++)
-                {
-                    //tuplet symbols can only be note or rest, so this just removes rests.
-                    if (t.GetComponent(i) is Note)
-                    {
-                        //if the note isn't tied to the next component of the tuplet
-                        if ((t.GetComponent(i) as Note).GetTie() == null)
-                        {
-                            //play the note in the tuplet
-                            MakeNote(t.GetComponent(i) as Note, channel, total, start, noteLength, tupLen, false);
-                            //calculate the start point of the next note in the tuplet
-                            start += noteLength + tupLen;
-                            //reset notelength
-                            noteLength = 0;
-                        }
-                        //if the note is tied to the next one and they are the same pitch
-                        else if ((t.GetComponent(i) as Note).GetTie() is Note && 
-                            (t.GetComponent(i) as Note).GetPitch() == ((t.GetComponent(i) as Note).GetTie() as Note).GetPitch())
-                        {
-                            //just increase the length of all previous notes and move on
-                            noteLength += tupLen;
-                        }
-                        //if the note slurs into the next one
-                        else
-                        {
-                            //play the note for its full duration
-                            MakeNote(t.GetComponent(i) as Note, channel, total, start, noteLength, tupLen, true);
-                            //adjust the start point for the next note
-                            start += noteLength + tupLen;
-                            //reset notelength
-                            noteLength = 0;
-                        }
-                    }
-                    //make sure that the start of the next note is adjusted if there is a rest.
-                    else
-                    {
-                        start += tupLen;
-                    }
-                }
-                //the last component of the tuplet has to be handled differently as it could be tied to another note- therefore it is handled more like
-                //a regular note than a tuplet note.
-                //if the last component is even a note
-                if (t.GetComponent((t).GetNumberOfNotes() - 1) is Note)
-                {
-                    //if the last note is not tied to anything
-                    if (t.GetTie() == null)
-                    {
-                        //play the last note as if it were any other in the tuplet
-                        MakeNote(t.GetComponent((t).GetNumberOfNotes() - 1) as Note, channel, total, start, noteLength, tupLen, false);
-                    }
-                    //if the last note is tied to another symbol which has the same pitch as it
-                    else if ((t.GetTie() is Note && (t.GetComponent(t.GetNumberOfNotes() - 1) as Note).GetPitch() == (t.GetTie() as Note).GetPitch()) ||
-                        (t.GetTie() is Tuplet && (t.GetTie() as Tuplet).GetComponent(0) is Note && 
-                        (t.GetComponent(t.GetNumberOfNotes() - 1) as Note).GetPitch() == ((t.GetTie() as Tuplet).GetComponent(0) as Note).GetPitch()))
-                    {
-                        //call notehandler and continue the recursion
-                        NoteHandler(t.GetTie(), tupLen + noteLength, start, total, channel);
-                    }
-                    //if it slurs into the next symbol
-                    else
-                    {
-                        //play the note for its full duration
-                        MakeNote(t.GetComponent((t).GetNumberOfNotes() - 1) as Note, channel, total, start, noteLength, tupLen, true);
-                        //call notehandler for the symbol it slurs into.
-                        NoteHandler(t.GetTie(), 0F, start + tupLen + noteLength, total, channel);
-                    }
                 }
             }
         }
@@ -276,10 +198,12 @@ namespace Microcontroller_Music
         //stops the process of playing the song
         public void Stop()
         {
+            //that is, of course, if the song is playing.
             if (clock.IsRunning)
             {
                 clock.Stop();
             }
+            //if there is an open output, close it
             if(output != null && output.IsOpen)
             {
                 output.Close();

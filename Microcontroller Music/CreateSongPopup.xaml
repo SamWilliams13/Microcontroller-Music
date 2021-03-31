@@ -7,40 +7,39 @@
         mc:Ignorable="d"
         Title="CreateSongPopup" Height="187.297" Width="618.578">
     <Grid Height="167" VerticalAlignment="Top">
+        <!-- label to tell user to enter the title of the song-->
         <Label x:Name="label" Content="Title" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" RenderTransformOrigin="-0.342,-0.379"/>
+        <!--label to make user enter the key signature of the first bar-->
         <Label x:Name="label1" Content="Key Signature:" HorizontalAlignment="Left" Margin="10,41,0,0" VerticalAlignment="Top"/>
+        <!--label to tell user to enter the time signature in the 2 combo boxes-->
         <Label x:Name="label1_Copy1" Content="Time Signature:" HorizontalAlignment="Left" Margin="10,104,0,0" VerticalAlignment="Top"/>
+        <!-- label to enter the name of the first track-->
         <Label x:Name="label1_Copy" Content="First Track Name:" HorizontalAlignment="Left" Margin="308,51,0,0" VerticalAlignment="Top"/>
+        <!-- label to tell user to enter the key of the first track-->
         <Label x:Name="label1_Copy2" Content="First Track Key:" HorizontalAlignment="Left" Margin="308,77,0,0" VerticalAlignment="Top" Height="27"/>
+        <!-- textbox to enter the name of the song-->
         <TextBox x:Name="SongTitle" HorizontalAlignment="Left" Height="23" Margin="114,13,0,0" TextWrapping="Wrap" Text="Song 1" VerticalAlignment="Top" Width="487"/>
+        <!-- textbox to enter the name of the first track-->
         <TextBox x:Name="TrackTitle" HorizontalAlignment="Left" Height="23" Margin="413,54,0,0" TextWrapping="Wrap" Text="Track1" VerticalAlignment="Top" Width="188"/>
-
+        
+        <!-- combobox to select the key of the first bar-->
         <ComboBox x:Name="Key" HorizontalAlignment="Left" Margin="413,82,0,0" VerticalAlignment="Top" Width="107" SelectedIndex="0">
             <ComboBoxItem Content="Treble"/>
             <ComboBoxItem Content="Bass"/>
         </ComboBox>
+        <!-- selector for the top number in timesig. enough items are defined that 4/4 can be selected when the window opens-->
         <ComboBox x:Name="TimeSigTop" HorizontalAlignment="Left" Margin="114,101,0,0" VerticalAlignment="Top" Width="120" RenderTransformOrigin="0.494,-0.088" Height="23" SelectedIndex="2">
             <ComboBoxItem Content="2"/>
             <ComboBoxItem Content="3"/>
             <ComboBoxItem Content="4"/>
-            <ComboBoxItem Content="5"/>
-            <ComboBoxItem Content="6"/>
-            <ComboBoxItem Content="7"/>
-            <ComboBoxItem Content="8"/>
-            <ComboBoxItem Content="9"/>
-            <ComboBoxItem Content="10"/>
-            <ComboBoxItem Content="11"/>
-            <ComboBoxItem Content="12"/>
-            <ComboBoxItem Content="13"/>
-            <ComboBoxItem Content="14"/>
-            <ComboBoxItem Content="15"/>
-            <ComboBoxItem Content="16"/>
         </ComboBox>
+        <!-- selector for the bottom number in timesig. can only be 2, 4, or 8. when changed it calls method to change which top numbers are available.-->
         <ComboBox x:Name="TimeSigBottom" HorizontalAlignment="Left" Margin="114,124,0,0" VerticalAlignment="Top" Width="120" SelectedIndex="1" SelectionChanged="TimeSigBottom_SelectionChanged">
             <ComboBoxItem Content="2"/>
             <ComboBoxItem Content="4"/>
             <ComboBoxItem Content="8"/>
         </ComboBox>
+        <!-- combobox containing all keysigs. the integer value of keysig can be found by subtracting 7 from the selected index-->
         <ComboBox x:Name="KeySig" HorizontalAlignment="Left" Margin="114,41,0,0" VerticalAlignment="Top" Width="163" SelectedIndex="7">
             <ComboBoxItem Content="Cb Major (7b)"/>
             <ComboBoxItem Content="Gb Major / Eb Minor (6b)"/>
@@ -58,8 +57,11 @@
             <ComboBoxItem Content="F# Major / D# Minor (6#)"/>
             <ComboBoxItem Content="C# Major (7#)"/>
         </ComboBox>
-        <Button x:Name="OKButton" Content="OK" HorizontalAlignment="Left" Margin="501,124,0,0" VerticalAlignment="Top" Width="75" Click="button_Click"/>
+        <!-- ok button to close dialog-->
+        <Button x:Name="OKButton" Content="OK" HorizontalAlignment="Left" Margin="501,124,0,0" VerticalAlignment="Top" Width="75" Click="Button_Click"/>
+        <!-- textbox to enter bpm-->
         <TextBox x:Name="Tempo" HorizontalAlignment="Left" Margin="114,68,0,0" VerticalAlignment="Top" Width="143" Text="120"/>
+        <!-- label to tell user where to enter tempo -->
         <Label x:Name="label1_Copy3" Content="Tempo:" HorizontalAlignment="Left" Margin="10,67,0,0" VerticalAlignment="Top"/>
 
     </Grid>

@@ -31,6 +31,7 @@ namespace Microcontroller_Music
             this.Close();
         }
 
+        //returns whether the bpm entered is a number, and passes the new bpm out by reference
         public bool GetNewBPM(ref int beepeem)
         {
             return Int32.TryParse(textBox.Text, out beepeem);
