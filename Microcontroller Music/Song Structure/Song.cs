@@ -448,31 +448,40 @@ namespace Microcontroller_Music
             UpdateTotalBars();
         }
 
+        //inserts a bar after the index in params
         public void InsertBarAt(int bar)
         {
+            //adds duplicates the time sig and key sig in the bar before
             KeySigs.Insert(bar + 1, KeySigs[bar]);
             TimeSigs.Insert(bar + 1, TimeSigs[bar]);
+            //inserts a bar after the index in each track
             foreach (Track t in Tracks)
             {
                 t.InsertBarAt(bar + 1);
             }
+            //increase total bars
             totalBars++;
         }
 
+        //deletes the bar at index
         public bool DeleteBar(int barIndex)
         {
+            //if there's only one left then return false so a new bar can be added and the process started again
             if (totalBars == 1)
             {
                 return false;
             }
             else
             {
+                //delete the bar in all tracks
                 foreach (Track t in Tracks)
                 {
                     t.DeleteBar(barIndex);
                 }
+                //remove a timesig and keysig from the lists
                 TimeSigs.RemoveAt(barIndex);
                 KeySigs.RemoveAt(barIndex);
+                //update total bars for consistency.
                 totalBars--;
                 UpdateTotalBars();
                 return true;

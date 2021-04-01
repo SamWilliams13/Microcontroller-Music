@@ -1,4 +1,4 @@
-﻿<!--<sets default size and says you can resize - may remove depending on amount of errors caused./-->
+﻿<!--sets default size and says you can resize-->
     <Window x:Class="Microcontroller_Music.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -12,12 +12,14 @@
             WindowState="Maximized"
             Closing="Window_Closing" 
            > 
+        <!--a grid to allow everything to be in place-->
     <Grid Background="White" x:Name="WindowGrid">
         <Grid.RowDefinitions>
             <!--<top - for menu/-->
             <RowDefinition x:Name ="MenuHeight" Height="25"></RowDefinition>
-            <!--<bottom - main section/-->
+            <!--<middle - main section/-->
             <RowDefinition x:Name="ScrollHeight"></RowDefinition>
+            <!--bottom - for status bar-->
             <RowDefinition x:Name="StatusHeight" Height="30"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
@@ -29,7 +31,7 @@
         <!--<this is where the canvas goes so you can scroll/-->
         <ScrollViewer  Grid.Row="1" x:Name="MainScroll" HorizontalAlignment="Stretch" VerticalAlignment="Top" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" >
             <!--<test image for when the canvas fails for whatever reason<Image Source="D:\Libraries\Pictures\tbshs.png"/>/-->
-                <!--<this is where the sheet music is drawn and interacted with/-->
+                <!--<this is where the sheet music is drawn and interacted with, with methods for left/right click and hover over/-->
             <Canvas x:Name="SheetMusic" 
                     HorizontalAlignment="Center" 
                     Background="#FFFFFE" 
@@ -39,14 +41,18 @@
                     PreviewMouseRightButtonDown="SheetMusic_PreviewMouseRightButtonDown">
             </Canvas>
         </ScrollViewer>
+        <!--status bar so you can see error messages without them getting in the way-->
         <StatusBar Grid.Row="2" x:Name="statusBar" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Grid.ColumnSpan="2">
+            <!--where the error messages actually go-->
             <StatusBarItem x:Name="statusItem">
             </StatusBarItem>
         </StatusBar>
                    
         <!--<this is where the Top bar is defined for controls/-->
         <Menu x:Name="TopBar" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2">
+            <!--File, Song, Export, Play button and Zoom slider-->
             <MenuItem Header="_File">
+                <!--file has menu items for new, open, and save-->
                 <MenuItem Header="_New..." Click="CreateNewFile"/>
                 <MenuItem Header="_Open..." Click="OpenExistingFile"/>
                 <Separator/>
@@ -55,15 +61,20 @@
                 <MenuItem Header="Export as Bitmap..." Click="BitmapExport_Click"/>
             </MenuItem>
             <MenuItem Header="_Song">
+                <!-- song has options to add track, change bpm and title-->
                 <MenuItem x:Name="AddTrack" Header="Add Track" Click="AddTrack_Click"/>
                 <MenuItem x:Name ="Bpm" Header="BPM: 120" Click="Bpm_Click"/>
                 <MenuItem x:Name="ChangeTitle"  Header="Change Title" Click="ChangeTitle_Click"/>
             </MenuItem>
+            <!--slider to zoom in and out-->
             <Slider x:Name="Zoom" Orientation="Horizontal" Value="1800" Maximum="3600" Minimum="100" ValueChanged="Zoom_ValueChanged" Width="100"/>
+            <!--button to play midi preview-->
             <Button x:Name="Play_Button" Content="Play" Click="Play_Button_Click"/>
         </Menu>
         <!--<this is the toolbar. it has buttons for all the types of notes./-->
+        <!--scroll viewer so all options can be used when not fullscreen-->
         <ScrollViewer x:Name="ToolBoxScroll" Grid.Column="1" Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <!--stack panel has radio buttons that look like toggle buttons that have pictures of the note types they represent-->
             <StackPanel x:Name="ToolBox" Grid.Column="1" Grid.Row="1" Grid.RowSpan="2">
                 <RadioButton GroupName="NoteType" Style="{StaticResource {x:Type ToggleButton}}" Checked="RadioButton_Checked" Tag="Semiquaver">
                     <Image Source="pack://siteoforigin:,,,/source/semiquaver note.png" Stretch="Uniform"/>

@@ -7,26 +7,21 @@
         mc:Ignorable="d"
         Title="TimeSigChange" Height="165.406" Width="325.676">
     <Grid Margin="0,0,0,11">
+        <!--combobox containing enough top numbers to show 4/4 on open. lets user determine top number-->
         <ComboBox x:Name="TopNumber" HorizontalAlignment="Left" Margin="173,31,0,0" VerticalAlignment="Top" Width="120" SelectedIndex="2">
             <ComboBoxItem Content="2"/>
             <ComboBoxItem Content="3"/>
             <ComboBoxItem Content="4"/>
-            <ComboBoxItem Content="5"/>
-            <ComboBoxItem Content="6"/>
-            <ComboBoxItem Content="7"/>
-            <ComboBoxItem Content="8"/>
-            <ComboBoxItem Content="9"/>
-            <ComboBoxItem Content="10"/>
-            <ComboBoxItem Content="11"/>
-            <ComboBoxItem Content="12"/>
         </ComboBox>
+        <!--lets user select bottom number from choices 2,4,8. calls method to change the available top numbers when changed-->
         <ComboBox x:Name="BottomNumber" HorizontalAlignment="Left" Margin="173,53,0,0" VerticalAlignment="Top" Width="120" SelectedIndex="1" SelectionChanged="TimeSigBottom_SelectionChanged">
             <ComboBoxItem Content="2"/>
             <ComboBoxItem Content="4"/>
             <ComboBoxItem Content="8"/>
         </ComboBox>
+        <!-- label to tell user to enter the time sig using comboboxes-->
         <Label x:Name="label" Content="New Time Signature: " HorizontalAlignment="Left" Margin="10,40,0,0" VerticalAlignment="Top"/>
+        <!--OK button to allow the main window to continue-->
         <Button x:Name="OKButton" Content="OK" HorizontalAlignment="Left" Height="27" Margin="218,86,0,0" VerticalAlignment="Top" Width="75" Click="OKButton_Click"/>
-
     </Grid>
 </Window>

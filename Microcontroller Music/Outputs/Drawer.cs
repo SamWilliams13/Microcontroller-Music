@@ -158,7 +158,6 @@ namespace Microcontroller_Music
             }
             //call the scaling function so the amount of zoom is maintained when drawing the page again.
             Zoom(canvas, zoomValue);
-            #region draw and populate bars
             //AddTitle is used here to draw the title at the top of the page
             AddTitle(ref canvas);
             //reset barsDone so that it can be used when looping through later
@@ -190,7 +189,6 @@ namespace Microcontroller_Music
                         DrawBarDividers(ref canvas, barLength);
                         //variable used is the start point of the first note in the bar (used as a relative position to draw the time signature and key signature)
                         int barStart = reservedForTrackTitles + (barStarts[barsDone + currentBarInLine] * semiquaverwidth);
-                        #region drawing time signature
                         //boolean to track whether the time sig has been drawn this bar, used for positioning the key sig.
                         bool drewTimeSig = false;
                         //if it is the first bar in the song or a new time signature (different to previous)
@@ -198,168 +196,183 @@ namespace Microcontroller_Music
                         {
                             //it draws the time sig
                             drewTimeSig = true;
-                            //draw the top number in the key signature
-                            Image topNumber = new Image
-                            {
-                                //find the image based on the number in the folder
-                                Source = new BitmapImage(new Uri(string.Concat(exePath, "\\source\\" +
-                                SongToDraw.GetTimeSigs(barsDone + currentBarInLine).top + ".png"), UriKind.Absolute)),
-                                //set height to fit in 2 line gaps (top half of stave)
-                                Height = lineGap * 1.98
-                            };
-                            //an adjustment value to make sure that 2 digit numbers appear centered above one digit numbers (i.e. 2 digit ones appear further to the left)
-                            double doubleAdjust = (SongToDraw.GetTimeSigs(barsDone + currentBarInLine).top >= 10) ? semiquaverwidth * 0.2 : 0;
-                            //sets to start at the top of the stave
-                            Canvas.SetTop(topNumber, lineStart - lineGap * 3.5);
-                            //sets to be just to the left of the first note in bar.
-                            Canvas.SetLeft(topNumber, barStart - semiquaverwidth - doubleAdjust);
-                            //add to canvas
-                            canvas.Children.Add(topNumber);
-                            //draw the bottom number - same as top number save for y position.
-                            Image bottomNumber = new Image
-                            {
-                                Source = new BitmapImage(new Uri(string.Concat(exePath, "\\source\\" +
-                                SongToDraw.GetTimeSigs(barsDone + currentBarInLine).bottom + ".png"), UriKind.Absolute)),
-                                Height = lineGap * 1.98
-                            };
-                            doubleAdjust = (SongToDraw.GetTimeSigs(barsDone + currentBarInLine).bottom >= 10) ? semiquaverwidth * 0.2 : 0;
-                            //sets the top of the number to be the middle of the stave
-                            Canvas.SetTop(bottomNumber, lineStart - lineGap * 1.5);
-                            Canvas.SetLeft(bottomNumber, barStart - semiquaverwidth - doubleAdjust);
-                            canvas.Children.Add(bottomNumber);
+                            DrawTimeSig(ref canvas, lineStart, barStart);
                         }
-                        #endregion
-                        #region drawing key signatures
-                        //arrays that store the positions of all the notes in a key signature for sharp and flat in bass clef
-                        int[] bassSharps = { 0, 8, 5, 9, 6, 3, 7, 4 };
-                        int[] bassFlats = { 0, 4, 7, 3, 6, 2, 5, 1 };
-                        //stores the key signature of the current bar.
-                        int keySig = SongToDraw.GetKeySigs(currentBarInLine + barsDone);
-                        //logic for whether the key sig should be displayed (first bar in line or different to previous)
-                        if (currentBarInLine == 0 || keySig != SongToDraw.GetKeySigs(currentBarInLine + barsDone - 1))
-                        {
-                            //this is used so that little extra code is needed for moving to c major.
-                            //sets the name of the image so sharp or flat can become natural when needed
-                            string symbolType = "";
-                            if (keySig > 0)
-                            {
-                                symbolType = "Sharp";
-                            }
-                            else if (keySig < 0)
-                            {
-                                symbolType = "Flat";
-                            }
-                            else if (currentBarInLine + barsDone > 0)
-                            {
-                                //key sig is changed so that there is enough space to fit the naturals.
-                                symbolType = "Natural";
-                                keySig = SongToDraw.GetKeySigs(barsDone + currentBarInLine - 1);
-                            }
-                            //if key signature has sharps
-                            if (keySig > 0 || (keySig == 0 && barsDone + currentBarInLine > 0))
-                            {
-                                //loop through each symbol in the key signature
-                                for (int m = 1; m <= keySig; m++)
-                                {
-                                    //make a new image
-                                    Image sharperImage = new Image
-                                    {
-                                        //find the asset for a sharp
-                                        Source = new BitmapImage(new Uri(string.Concat(exePath, "\\source\\" + symbolType + ".png"), UriKind.Absolute)),
-                                        //make the sharp the right height
-                                        Height = lineGap * 3
-                                    };
-                                    //if treble then draw the sharps 2 positions above where it would be in bass
-                                    if (SongToDraw.GetTracks(currentInstrument).GetTreble())
-                                    {
-                                        Canvas.SetTop(sharperImage, lineStart - (2 + bassSharps[m]) * lineGap / 2);
-                                    }
-                                    else
-                                    {
-                                        Canvas.SetTop(sharperImage, lineStart - bassSharps[m] * lineGap / 2);
-                                    }
-                                    //if the time sig was drawn then draw the sharps 1 semiquaver to the left of where they should be
-                                    //which is just to the left of the start of the notes, with some padding, and 1 symbol space to the right of the previous drawn symbol.
-                                    if (drewTimeSig)
-                                    {
-                                        Canvas.SetLeft(sharperImage, barStart - (keySig - m) * semiquaverwidth * keySigWidthPerSign - 2 * semiquaverwidth);
-                                    }
-                                    else
-                                    {
-                                        Canvas.SetLeft(sharperImage, barStart - (keySig - m) * semiquaverwidth * keySigWidthPerSign - 1 * semiquaverwidth);
-                                    }
-                                    //add to canvas.
-                                    canvas.Children.Add(sharperImage);
-                                }
-                            }
-                            //if its flats
-                            else if (keySig < 0 || (keySig == 0 && barsDone + currentBarInLine > 0))
-                            {
-                                //loop through all symbols
-                                for (int m = 1; m <= -1 * keySig; m++)
-                                {
-                                    //make a new image for the symbol
-                                    Image flatterImage = new Image
-                                    {
-                                        //find the flat image in the folder
-                                        Source = new BitmapImage(new Uri(string.Concat(exePath, "\\source\\" + symbolType + ".png"), UriKind.Absolute)),
-                                        //give it the appropriate height
-                                        Height = lineGap * 3
-                                    };
-                                    //if treble then place it 2 positions above where it would be in bass (stored in array)
-                                    if (SongToDraw.GetTracks(currentInstrument).GetTreble())
-                                    {
-                                        Canvas.SetTop(flatterImage, lineStart - (2 + bassFlats[m]) * lineGap / 2 - lineGap / 2);
-                                    }
-                                    else
-                                    {
-                                        Canvas.SetTop(flatterImage, lineStart - bassFlats[m] * lineGap / 2 - lineGap / 2);
-                                    }
-                                    //same logic as treble
-                                    if (drewTimeSig)
-                                    {
-                                        Canvas.SetLeft(flatterImage, barStart - (-1 * keySig - m) * semiquaverwidth * keySigWidthPerSign - 2 * semiquaverwidth);
-                                    }
-                                    else
-                                    {
-                                        Canvas.SetLeft(flatterImage, barStart - (-1 * keySig - m) * semiquaverwidth * keySigWidthPerSign - 1 * semiquaverwidth);
-                                    }
-                                    //add symbol to canvas.
-                                    canvas.Children.Add(flatterImage);
-                                }
-                            }
-                        }
-                        #endregion
+                        DrawKeySig(ref canvas, lineStart, barStart, drewTimeSig);
                         //main part of this method. Draws all the notes, rests, beams etc.
                         DrawBar(ref canvas, currentBarInLine + barsDone, currentInstrument, currentLine);
                     }
-                    #region draw the stave
-                    //loop through 5 times to draw each horizontal stave line. uses barlength that was totalled in the loop to draw all the way along line
-                    for (int k = 0; k < 5; k++)
-                    {
-                        //make a new line
-                        Line staveLine = new Line
-                        {
-                            //x1 value is just after padding
-                            X1 = reservedForTrackTitles,
-                            //x2 goes to the end of the line calculated in loop
-                            X2 = barLength + reservedForTrackTitles,
-                            //uses the same calculation for the top of the stave as others. adds a k value to step downwards to draw equally spaced lines.
-                            Y1 = lineStarts[currentLine] + (lineHeight * currentInstrument) + ((maxLinesAbove + k) * lineGap) + lineGap / 2
-                        };
-                        //horizontal
-                        staveLine.Y2 = staveLine.Y1;
-                        //give the line some drawing properties and add it to canvas.
-                        staveLine.Stroke = black;
-                        staveLine.StrokeThickness = staveThickness;
-                        canvas.Children.Add(staveLine);
-                    }
-                    #endregion
+                    //draw the stave
+                    DrawStaveLines(ref canvas, barLength);
                 }
                 //increase the number of bars done in previous lines so that the index of bar can be used when looping.
                 barsDone += barsPerLine[currentLine];
             }
-            #endregion
+        }
+
+        //draws the horizontal stave lines
+        private void DrawStaveLines(ref Canvas canvas, int barLength)
+        {
+            //loop through 5 times to draw each horizontal stave line. uses barlength that was totalled in the loop to draw all the way along line
+            for (int k = 0; k < 5; k++)
+            {
+                //make a new line
+                Line staveLine = new Line
+                {
+                    //x1 value is just after padding
+                    X1 = reservedForTrackTitles,
+                    //x2 goes to the end of the line calculated in loop
+                    X2 = barLength + reservedForTrackTitles,
+                    //uses the same calculation for the top of the stave as others. adds a k value to step downwards to draw equally spaced lines.
+                    Y1 = lineStarts[currentLine] + (lineHeight * currentInstrument) + ((maxLinesAbove + k) * lineGap) + lineGap / 2
+                };
+                //horizontal
+                staveLine.Y2 = staveLine.Y1;
+                //give the line some drawing properties and add it to canvas.
+                staveLine.Stroke = black;
+                staveLine.StrokeThickness = staveThickness;
+                canvas.Children.Add(staveLine);
+            }
+        }
+
+        //draws the key sig at the start of necessary bars
+        private void DrawKeySig(ref Canvas canvas, int lineStart, int barStart, bool drewTimeSig)
+        {
+            //arrays that store the positions of all the notes in a key signature for sharp and flat in bass clef
+            int[] bassSharps = { 0, 8, 5, 9, 6, 3, 7, 4 };
+            int[] bassFlats = { 0, 4, 7, 3, 6, 2, 5, 1 };
+            //stores the key signature of the current bar.
+            int keySig = SongToDraw.GetKeySigs(currentBarInLine + barsDone);
+            //logic for whether the key sig should be displayed (first bar in line or different to previous)
+            if (currentBarInLine == 0 || keySig != SongToDraw.GetKeySigs(currentBarInLine + barsDone - 1))
+            {
+                //this is used so that little extra code is needed for moving to c major.
+                //sets the name of the image so sharp or flat can become natural when needed
+                string symbolType = "";
+                if (keySig > 0)
+                {
+                    symbolType = "Sharp";
+                }
+                else if (keySig < 0)
+                {
+                    symbolType = "Flat";
+                }
+                else if (currentBarInLine + barsDone > 0)
+                {
+                    //key sig is changed so that there is enough space to fit the naturals.
+                    symbolType = "Natural";
+                    keySig = SongToDraw.GetKeySigs(barsDone + currentBarInLine - 1);
+                }
+                //if key signature has sharps
+                if (keySig > 0 || (keySig == 0 && barsDone + currentBarInLine > 0))
+                {
+                    //loop through each symbol in the key signature
+                    for (int m = 1; m <= keySig; m++)
+                    {
+                        //make a new image
+                        Image sharperImage = new Image
+                        {
+                            //find the asset for a sharp
+                            Source = new BitmapImage(new Uri(string.Concat(exePath, "\\source\\" + symbolType + ".png"), UriKind.Absolute)),
+                            //make the sharp the right height
+                            Height = lineGap * 3
+                        };
+                        //if treble then draw the sharps 2 positions above where it would be in bass
+                        if (SongToDraw.GetTracks(currentInstrument).GetTreble())
+                        {
+                            Canvas.SetTop(sharperImage, lineStart - (2 + bassSharps[m]) * lineGap / 2);
+                        }
+                        else
+                        {
+                            Canvas.SetTop(sharperImage, lineStart - bassSharps[m] * lineGap / 2);
+                        }
+                        //if the time sig was drawn then draw the sharps 1 semiquaver to the left of where they should be
+                        //which is just to the left of the start of the notes, with some padding, and 1 symbol space to the right of the previous drawn symbol.
+                        if (drewTimeSig)
+                        {
+                            Canvas.SetLeft(sharperImage, barStart - (keySig - m) * semiquaverwidth * keySigWidthPerSign - 2 * semiquaverwidth);
+                        }
+                        else
+                        {
+                            Canvas.SetLeft(sharperImage, barStart - (keySig - m) * semiquaverwidth * keySigWidthPerSign - 1 * semiquaverwidth);
+                        }
+                        //add to canvas.
+                        canvas.Children.Add(sharperImage);
+                    }
+                }
+                //if its flats
+                else if (keySig < 0 || (keySig == 0 && barsDone + currentBarInLine > 0))
+                {
+                    //loop through all symbols
+                    for (int m = 1; m <= -1 * keySig; m++)
+                    {
+                        //make a new image for the symbol
+                        Image flatterImage = new Image
+                        {
+                            //find the flat image in the folder
+                            Source = new BitmapImage(new Uri(string.Concat(exePath, "\\source\\" + symbolType + ".png"), UriKind.Absolute)),
+                            //give it the appropriate height
+                            Height = lineGap * 3
+                        };
+                        //if treble then place it 2 positions above where it would be in bass (stored in array)
+                        if (SongToDraw.GetTracks(currentInstrument).GetTreble())
+                        {
+                            Canvas.SetTop(flatterImage, lineStart - (2 + bassFlats[m]) * lineGap / 2 - lineGap / 2);
+                        }
+                        else
+                        {
+                            Canvas.SetTop(flatterImage, lineStart - bassFlats[m] * lineGap / 2 - lineGap / 2);
+                        }
+                        //same logic as treble
+                        if (drewTimeSig)
+                        {
+                            Canvas.SetLeft(flatterImage, barStart - (-1 * keySig - m) * semiquaverwidth * keySigWidthPerSign - 2 * semiquaverwidth);
+                        }
+                        else
+                        {
+                            Canvas.SetLeft(flatterImage, barStart - (-1 * keySig - m) * semiquaverwidth * keySigWidthPerSign - 1 * semiquaverwidth);
+                        }
+                        //add symbol to canvas.
+                        canvas.Children.Add(flatterImage);
+                    }
+                }
+            }
+        }
+
+        //draws the time signature
+        private void DrawTimeSig(ref Canvas canvas, int lineStart, int barStart)
+        {
+
+            //draw the top number in the key signature
+            Image topNumber = new Image
+            {
+                //find the image based on the number in the folder
+                Source = new BitmapImage(new Uri(string.Concat(exePath, "\\source\\" +
+                SongToDraw.GetTimeSigs(barsDone + currentBarInLine).top + ".png"), UriKind.Absolute)),
+                //set height to fit in 2 line gaps (top half of stave)
+                Height = lineGap * 1.98
+            };
+            //an adjustment value to make sure that 2 digit numbers appear centered above one digit numbers (i.e. 2 digit ones appear further to the left)
+            double doubleAdjust = (SongToDraw.GetTimeSigs(barsDone + currentBarInLine).top >= 10) ? semiquaverwidth * 0.2 : 0;
+            //sets to start at the top of the stave
+            Canvas.SetTop(topNumber, lineStart - lineGap * 3.5);
+            //sets to be just to the left of the first note in bar.
+            Canvas.SetLeft(topNumber, barStart - semiquaverwidth - doubleAdjust);
+            //add to canvas
+            canvas.Children.Add(topNumber);
+            //draw the bottom number - same as top number save for y position.
+            Image bottomNumber = new Image
+            {
+                Source = new BitmapImage(new Uri(string.Concat(exePath, "\\source\\" +
+                SongToDraw.GetTimeSigs(barsDone + currentBarInLine).bottom + ".png"), UriKind.Absolute)),
+                Height = lineGap * 1.98
+            };
+            doubleAdjust = (SongToDraw.GetTimeSigs(barsDone + currentBarInLine).bottom >= 10) ? semiquaverwidth * 0.2 : 0;
+            //sets the top of the number to be the middle of the stave
+            Canvas.SetTop(bottomNumber, lineStart - lineGap * 1.5);
+            Canvas.SetLeft(bottomNumber, barStart - semiquaverwidth - doubleAdjust);
+            canvas.Children.Add(bottomNumber);
+
         }
 
         //draws the lines that split up bars
@@ -643,7 +656,6 @@ namespace Microcontroller_Music
                 DrawStems(ref canvas, barStart, lineStart, track, bar, beamStart, beamEnd);
             }
         }
-        #region separate functions for drawing certain important things
 
         //draws the title at the top of the page
         public void AddTitle(ref Canvas canvas)
@@ -728,18 +740,21 @@ namespace Microcontroller_Music
             return drawAccidental;
         }
 
-        //draws the lines between groups of notes
+        //draws the lines between groups of notes - very long and somewhat repetitive
         public void DrawStems(ref Canvas canvas, int barStart, int lineStart, int trackIndex, int barIndex, int startIndex, int endIndex)
         {
+            //arrays to store various pieces of information about the notes in the group
             int[] pitches = new int[endIndex - startIndex + 1];
             int[] startPoints = new int[endIndex - startIndex + 1];
             int[] lengths = new int[endIndex - startIndex + 1];
             bool[] staccatos = new bool[endIndex - startIndex + 1];
+            //ingtegers to store more infor about the group
             int averagePitch = 0;
             int highestPitch = -100;
             int lowestPitch = 100;
             int closestPitch = 100000000;
             bool treble = SongToDraw.GetTracks(trackIndex).GetTreble();
+            //loop through all the notes in the group to fill the arrays of data about the notes
             for (int i = 0; i <= endIndex - startIndex; i++)
             {
                 Note note = SongToDraw.GetTracks(trackIndex).GetBars(barIndex).GetNotes(startIndex + i) as Note;
@@ -761,26 +776,32 @@ namespace Microcontroller_Music
                     closestPitch = pitches[i];
                 }
             }
+            //calculate the average pitch for use in the beam line
             averagePitch /= lengths.Length;
+            //if the group starts and ends at the same place it is a single
             if (SongToDraw.GetTracks(trackIndex).GetBars(barIndex).GetNotes(startIndex).GetStart() == SongToDraw.GetTracks(trackIndex).GetBars(barIndex).GetNotes(endIndex).GetStart() && SongToDraw.GetTracks(trackIndex).GetBars(barIndex).GetNotes(endIndex).GetLength() < 16)
             {
                 //note is a single and should have a flag
                 //all this has to do is draw a line from the furthest from centre to an octave away from opposite note
+                //set up stem
                 Line singleLine = new Line
                 {
                     Stroke = black,
                     StrokeThickness = 2
                 };
+                //set up flag
                 Image flag = new Image
                 {
                     Height = 3 * lineGap
                 };
+                //set up staccato
                 Ellipse staccatoCircle = new Ellipse
                 {
                     Fill = black,
                     Height = lineGap * 0.4
                 };
                 staccatoCircle.Width = staccatoCircle.Height;
+                //put the staccato in the right place, just don't make it visible yet
                 Canvas.SetLeft(staccatoCircle, barStart + semiquaverwidth * startPoints[0] + semiquaverwidth / 2 - staccatoCircle.Width / 4);
                 if (highestPitch < 3 || Math.Abs(highestPitch - 3) < Math.Abs(lowestPitch - 3))
                 {
@@ -788,13 +809,18 @@ namespace Microcontroller_Music
                     singleLine.X1 = barStart + semiquaverwidth * startPoints[0] + noteHeadWidth + 1 + (semiquaverwidth - noteHeadWidth) / 2;
                     singleLine.X2 = singleLine.X1;
                     singleLine.Y1 = lineStart - (lowestPitch) * lineGap / 2;
+                    //if line is enough ledger lines away it goes to a specific point instead of an octave up
                     singleLine.Y2 = (Math.Abs(highestPitch - 3) > 7) ? lineStart - lineGap : lineStart - (highestPitch + 7) * lineGap / 2;
+                    //puts the flag at top of stem
                     Canvas.SetTop(flag, singleLine.Y2);
+                    //if it is shorter than a crotchet it will have a flag, so find the image source
                     if (lengths[0] < 4)
                     {
+                        //makes sure that dotted notes will also point to the right file
                         double flagLen = (Math.Log(lengths[0], 2) % 1 != 0) ? lengths[0] / 1.5 : lengths[0];
                         flag.Source = new BitmapImage(new Uri(string.Concat(exePath, "\\source\\up" + flagLen + "flag.png"), UriKind.Absolute));
                     }
+                    //if the notes are staccato place the circle at the bottom and make it visible
                     if (staccatos[0])
                     {
                         Canvas.SetTop(staccatoCircle, lineStart - (lowestPitch - 1) * lineGap / 2 + lineGap / 4);
@@ -805,8 +831,11 @@ namespace Microcontroller_Music
                 else
                 {
                     //stem goes down
+                    //similar to above but with different values
+                    //stem is to left of note instead of right
                     singleLine.X1 = barStart + semiquaverwidth * startPoints[0] + 4 + (semiquaverwidth - noteHeadWidth) / 2;
                     singleLine.X2 = singleLine.X1;
+                    //similar logic to when step goes up but the note 
                     singleLine.Y1 = lineStart - (highestPitch) * lineGap / 2;
                     singleLine.Y2 = (Math.Abs(lowestPitch - 3) > 7) ? lineStart - lineGap - lineGap / 2 : lineStart - (lowestPitch - 7) * lineGap / 2;
                     Canvas.SetTop(flag, singleLine.Y2 - 3 * lineGap);
@@ -856,6 +885,7 @@ namespace Microcontroller_Music
                 //calculate height of beam using average distance from gradient and min (target 3.5, min 2?)
                 double beamDifference = averagePitch + averageStart * beamGradient;
                 beamDifference = (lastBeamUp) ? beamDifference + 7 : beamDifference - 7;
+                //loop through all the notes to make sure none are too close to the beam
                 for (int i = 0; i < startPoints.Length; i++)
                 {
                     if (lastBeamUp && beamDifference - beamGradient * startPoints[i] - pitches[i] < 6)
@@ -877,6 +907,7 @@ namespace Microcontroller_Music
                 Point p2;
                 int lineStartFromSemiStart;
                 int beamUpAdjustment = 0;
+                //use the new gradient to draw the beam
                 if (lastBeamUp)
                 {
                     p2 = new Point(barStart + startPoints[startPoints.Length - 1] * semiquaverwidth + noteHeadWidth + 1 + (semiquaverwidth - noteHeadWidth) / 2, lineStart - (beamDifference - beamGradient * startPoints[startPoints.Length - 1]) * lineGap / 2);
@@ -934,6 +965,7 @@ namespace Microcontroller_Music
                         }
                     }
                     //add a second line for semiquavers and notes after dots.
+                    //use the gradient line and intercept to draw these lines. polygons instead of lines or rectangles so the lines can be vertical
                     double semiBottomY = stem.Y2;
                     semiBottomY = (lastBeamUp) ? semiBottomY + lineGap * 0.75 : semiBottomY - lineGap * 0.75;
                     double semiTopY = (lastBeamUp) ? semiBottomY + lineGap / 2 : semiBottomY - lineGap / 2;
@@ -1014,18 +1046,20 @@ namespace Microcontroller_Music
 
         //regarding the parameters:
         //canvas so you can add things to the image
-        //note so that it can see everything it needs to draw it. tie will be used to draw the lines, but ones that bridge over bars WILL be a problem
-        //due to the whole "things go inbetween and it isnt a consistent distance apart" situation
         //barstart gives the x coord to add to to place the note
         //lineStart in this instance... it would be nice to give it as the E4 in treble and G2 in bass. then you can compare.
+
+        //draws the head of the note and certain things surrounding it (staccato and accidental)
         public void DrawNote(ref Canvas canvas, int barStart, int lineStart, int trackIndex, int barIndex, int noteIndex, bool drawAccidental, double startDisplacement)
         {
+            //gets the note being drawn
             Note note = SongToDraw.GetTracks(trackIndex).GetBars(barIndex).GetNotes(noteIndex) as Note;
-
+            //calculates the pitch of the note ignoring the accidental
             int pitch = note.GetPitch() - note.GetAccidental();
-            Console.WriteLine(pitch + ", " + note.GetPitch() + ", " + note.GetAccidental());
+            //gets the distance from the bottom of stave that the circle needs to be drawn
             int spaceDifferenceFromBottomLine = FindLineDifferenceFromMiddleC(pitch, (SongToDraw.GetTracks(trackIndex).GetTreble()));
             bool drawDot;
+            //if the length cannot be divided by 2 it must be a dotted note
             if (Math.Log(note.GetLength(), 2) % 1 != 0)
             {
                 drawDot = true;
@@ -1034,198 +1068,261 @@ namespace Microcontroller_Music
             {
                 drawDot = false;
             }
+            //if the note has a forward connection, draw it now
             if (note.GetTie() != null)
             {
                 DrawConnection(ref canvas, note, barIndex, trackIndex, barStart, lineStart);
             }
+            //the main circle used to draw the note head, set up a couple properties and dimensions
             Ellipse noteCircle = new Ellipse
             {
                 Fill = black,
                 Height = lineGap,
                 Width = noteHeadWidth
             };
+            //position the note head
             Canvas.SetLeft(noteCircle, barStart + (semiquaverwidth * (note.GetStart() + startDisplacement)) + (semiquaverwidth - noteHeadWidth) / 2);
             Canvas.SetTop(noteCircle, lineStart - spaceDifferenceFromBottomLine * lineGap / 2 - lineGap / 4);
+            //rotate the note head to make it look better
             noteCircle.RenderTransform = new RotateTransform(-20);
+            //add the note head to the canvas
             canvas.Children.Add(noteCircle);
+            //if it is a minim (or dotted) then draw a white sircle on top of the note to make it look hollow
             if (note.GetLength() >= 8 && note.GetLength() < 16)
             {
+                //set up the white circle - it is thinner than the main circle
                 Ellipse minimGap = new Ellipse
                 {
                     Fill = white,
                     Height = lineGap / 2,
                     Width = noteHeadWidth - 1
                 };
+                //position the circle on the canvas inside of the previous one
                 Canvas.SetLeft(minimGap, barStart + (semiquaverwidth * note.GetStart()) + 2 + (semiquaverwidth - noteHeadWidth) / 2);
                 Canvas.SetTop(minimGap, lineStart - spaceDifferenceFromBottomLine * lineGap / 2);
+                //rotate to match
                 minimGap.RenderTransform = new RotateTransform(-20);
+                //add to canvas
                 canvas.Children.Add(minimGap);
             }
+            //if the note is a semibreve
             else if (note.GetLength() >= 16)
             {
+                //take the main note and un-rotate it
                 noteCircle.RenderTransform = null;
+                //move the note to be better positioned given its new rotation
                 Canvas.SetTop(noteCircle, lineStart - spaceDifferenceFromBottomLine * lineGap / 2 - lineGap / 2);
+                //set up a new white circle to make the note look hollow
+                //unlike the minim circle this one is designed to be thinner than the main circle
                 Ellipse semiBreveGap = new Ellipse
                 {
                     Fill = white,
                     Height = lineGap - 4,
                     Width = noteHeadWidth / 1.75
                 };
+                //position it in the middle of the main note head circle
                 Canvas.SetLeft(semiBreveGap, barStart + (semiquaverwidth * note.GetStart()) + lineGap / 2 + (semiquaverwidth - noteHeadWidth) / 2);
                 Canvas.SetTop(semiBreveGap, lineStart - spaceDifferenceFromBottomLine * lineGap / 2 - lineGap / 2);
+                //rotate to make it look pretty
                 semiBreveGap.RenderTransform = new RotateTransform(20);
+                //add to canvas
                 canvas.Children.Add(semiBreveGap);
             }
+            //if the note is dotted, dot it here
             if (drawDot)
             {
+                //set up the little circle
                 Ellipse dottedNoteDot = new Ellipse
                 {
                     Fill = black,
                     Height = lineGap * 0.4
                 };
                 dottedNoteDot.Width = dottedNoteDot.Height;
+                //position it to the right and in the middle (vertically) of the note head
                 Canvas.SetLeft(dottedNoteDot, barStart + (semiquaverwidth * (note.GetStart() + 1)) - lineGap / 4);
                 Canvas.SetTop(dottedNoteDot, lineStart - spaceDifferenceFromBottomLine * lineGap / 2 - lineGap / 4);
+                //add to canvas
                 canvas.Children.Add(dottedNoteDot);
             }
+            //if it's high enough up some ledger lines need drawing
             if (spaceDifferenceFromBottomLine > 7)
             {
+                //loop through each step where a line would be drawn until you reach the y coords of the note
+                //the loop forces linegap distances between each line
                 for (int i = lineStart - 4 * lineGap - lineGap / 2; i > lineStart - spaceDifferenceFromBottomLine * lineGap / 2 - lineGap / 2; i -= lineGap)
                 {
+                    //draw a semiquaverwidth line over the width of the note
                     Line staveLine = new Line
                     {
                         Stroke = black,
                         StrokeThickness = staveThickness
                     };
                     int leftShift = 0;
+                    //if its a semibreve the ledger lines need to be moved to the left a bit
                     if (note.GetLength() >= 16)
                     {
                         leftShift = 3;
                     }
+                    //draw a horizontal line across width
                     staveLine.X1 = barStart + (semiquaverwidth * (note.GetStart() + startDisplacement)) + lineGap / 2 - 10 - leftShift + (semiquaverwidth - noteHeadWidth) / 2;
                     staveLine.X2 = barStart + semiquaverwidth * (note.GetStart() + startDisplacement) + lineGap / 2 + noteHeadWidth - 3 - leftShift + (semiquaverwidth - noteHeadWidth) / 2;
                     staveLine.Y1 = i;
                     staveLine.Y2 = i;
+                    //add the ledger line to canvas
                     canvas.Children.Add(staveLine);
                 }
             }
+            //same as above but with different loop so it can go down below the stave
             else if (spaceDifferenceFromBottomLine < -1)
             {
                 for (int i = lineStart + lineGap + lineGap / 2; i < lineStart - spaceDifferenceFromBottomLine * lineGap / 2 + lineGap / 2; i += lineGap)
                 {
+                    //draw a semiquaverwidth line over the width of the note
                     Line staveLine = new Line
                     {
                         Stroke = black,
                         StrokeThickness = staveThickness
                     };
                     int leftShift = 0;
+                    //if its a semibreve the ledger lines need to be moved to the left a bit
                     if (note.GetLength() >= 16)
                     {
                         leftShift = 3;
                     }
+                    //draw a horizontal line across width
                     staveLine.X1 = barStart + (semiquaverwidth * (note.GetStart() + startDisplacement)) + lineGap / 2 - 10 - leftShift + (semiquaverwidth - noteHeadWidth) / 2;
                     staveLine.X2 = barStart + semiquaverwidth * (note.GetStart() + startDisplacement) + lineGap / 2 + noteHeadWidth - 3 - leftShift + (semiquaverwidth - noteHeadWidth) / 2;
                     staveLine.Y1 = i;
                     staveLine.Y2 = i;
+                    //add the ledger line to canvas
                     canvas.Children.Add(staveLine);
                 }
             }
+            //if an accidental has to be drawn, draw it here
             if (drawAccidental)
             {
+                //set up the image to be the right height
                 Image accidentalImage = new Image
                 {
                     Height = lineGap * 3
                 };
+                //if it's flat find the flat image in source and set it up to be positioned correctly and the right size
                 if (note.GetAccidental() == -1)
                 {
                     accidentalImage.Source = new BitmapImage(new Uri(string.Concat(exePath, "\\source\\Flat.png"), UriKind.Absolute));
                     Canvas.SetTop(accidentalImage, lineStart - (spaceDifferenceFromBottomLine + 3) * lineGap / 2 - lineGap / 4);
                     accidentalImage.Height = lineGap * 2.5;
                 }
+                //if it's natural find the natural image in source and set it up to be positioned correctly (it is already right size at top)
                 else if (note.GetAccidental() == 0)
                 {
                     accidentalImage.Source = new BitmapImage(new Uri(string.Concat(exePath, "\\source\\Natural.png"), UriKind.Absolute));
                     Canvas.SetTop(accidentalImage, lineStart - (spaceDifferenceFromBottomLine + 2) * lineGap / 2 - lineGap / 2.3);
                 }
+                //if it's sharp find the sharp image in source and set it up to be positioned correctly (it is already right size at top)
                 else
                 {
                     accidentalImage.Source = new BitmapImage(new Uri(string.Concat(exePath, "\\source\\Sharp.png"), UriKind.Absolute));
                     Canvas.SetTop(accidentalImage, lineStart - (spaceDifferenceFromBottomLine + 3) * lineGap / 2);
                 }
+                //set the accidental to be just to the left of the note head and add it to canvas
                 Canvas.SetLeft(accidentalImage, barStart + (semiquaverwidth) * (note.GetStart() + startDisplacement));
                 canvas.Children.Add(accidentalImage);
             }
         }
 
+        //draws ties and slurs between note
         private void DrawConnection(ref Canvas canvas, Note note, int bar, int track, int barStart, int lineStart)
         {
+            //the whole strange process to draw an arc on a canvas
+            //get the note to connect to
             Note tieNote = note.GetTie() as Note;
+            //arc segment is the info on the arc (end and curve)
             ArcSegment blackCurve = new ArcSegment();
+            //path figure has the start point and a collection of segments
             PathFigure connectionPathFigure = new PathFigure();
+            //holds the arcsegment
             PathSegmentCollection connectionPathSegmentCollection = new PathSegmentCollection();
+            //holds the path figure
             PathFigureCollection connectionPathFigureCollection = new PathFigureCollection();
+            //holds the figure collection
             PathGeometry connectionPathGeometry = new PathGeometry();
+            //has the geometry and can be drawn
             Path connectionPath = new Path();
+            //finds the midpoint y of the note heads
             double noteY = lineStart - FindLineDifferenceFromMiddleC(note.GetPitch() - note.GetAccidental(), (SongToDraw.GetTracks(track).GetTreble())) * lineGap / 2;
             double tieY = lineStart - FindLineDifferenceFromMiddleC(tieNote.GetPitch() - tieNote.GetAccidental(), (SongToDraw.GetTracks(track).GetTreble())) * lineGap / 2;
+            //if the note is low enough on the stave, the connection will be concave upwards
             if (-1 * (noteY - lineStart) < 4 * lineGap / 2)
             {
+                //therefore the connection will be moved to below the note head
                 noteY += lineGap * 0.75;
                 tieY += lineGap * 0.75;
+                //concave up
                 blackCurve.SweepDirection = SweepDirection.Counterclockwise;
             }
             else
             {
+                //above the note heads
                 noteY -= lineGap * 0.75;
                 tieY -= lineGap * 0.75;
+                //concave down
                 blackCurve.SweepDirection = SweepDirection.Clockwise;
             }
+            //start point is just to the right of the middle of the note head, and uses the precalculated y val
             connectionPathFigure.StartPoint = new Point(barStart + (note.GetStart()) * semiquaverwidth + semiquaverwidth / 2 + 10, noteY);
+            //if the tie starts before the note it must be in the next bar
             if (tieNote.GetStart() <= note.GetStart())
             {
+                //if the bar starts after the next one, it must be on a new line
                 if (barStarts[bar] >= barStarts[bar + 1])
                 {
+                    //therefore just draw the tie to the end of the bar
                     blackCurve.Point = new Point(barStart + (SongToDraw.GetTracks(0).GetBars(bar).GetMaxLength() + 1) * semiquaverwidth - 9, (noteY + tieY) / 2);
                 }
                 else
                 {
+                    //otherwise the x value of the endpoint must be put into the next bar
                     blackCurve.Point = new Point(barStarts[bar + 1] * semiquaverwidth + reservedForTrackTitles + semiquaverwidth / 2 - 9, tieY);
                 }
             }
             else
             {
+                //make the curve end just the left of the second note
                 blackCurve.Point = new Point(barStart + tieNote.GetStart() * semiquaverwidth + semiquaverwidth / 2 - 9, tieY);
             }
+            //sets up the size so it curves nicely over the distance
             blackCurve.Size = new Size(Math.Abs(blackCurve.Point.X - connectionPathFigure.StartPoint.X), 70);
-            if (-1 * (noteY - lineStart) < 4 * lineGap / 2)
-            {
-                blackCurve.SweepDirection = SweepDirection.Counterclockwise;
-            }
-            else
-            {
-                blackCurve.SweepDirection = SweepDirection.Clockwise;
-            }
+            //add all the objects to the object just above it until there is something drawable
             connectionPathSegmentCollection.Add(blackCurve);
             connectionPathFigure.Segments = connectionPathSegmentCollection;
             connectionPathFigureCollection.Add(connectionPathFigure);
             connectionPathGeometry.Figures = connectionPathFigureCollection;
+            //set up drawing properties
             connectionPath.Stroke = black;
             connectionPath.StrokeThickness = 3;
             connectionPath.Data = connectionPathGeometry;
+            //add to canvas
             canvas.Children.Add(connectionPath);
         }
 
+        //draws a rest on canvas using an image
         public void DrawRest(ref Canvas canvas, int barStart, int lineStart, int trackIndex, int barIndex, int noteIndex)
         {
+            //gets the rest for information
             Rest rest = SongToDraw.GetTracks(trackIndex).GetBars(barIndex).GetNotes(noteIndex) as Rest;
+            //makes an image to be added ot canvas
             Image restImage = new Image();
+            //makes a rectangle for minim and semibreve rests
             Rectangle restRectangle = new Rectangle
             {
                 Height = lineGap / 2,
                 Width = semiquaverwidth / 1.5
             };
+            //sets up the rest depending on its length
             switch (rest.GetLength())
             {
+                //if it is shorter than a minim it must find the image source in the folder, set it up to be the right size and y position in bar
                 case 1:
                     Canvas.SetTop(restImage, lineStart - lineGap * 2.25);
                     restImage.Source = new BitmapImage(new Uri(string.Concat(exePath, "\\source\\16th_rest.png"), UriKind.Absolute));
@@ -1241,6 +1338,7 @@ namespace Microcontroller_Music
                     restImage.Source = new BitmapImage(new Uri(string.Concat(exePath, "\\source\\Crotchet.png"), UriKind.Absolute));
                     restImage.Height = lineGap * 3;
                     break;
+                    //if it is a minim or longer it must set the rectangle to be drawn and give it the right y position
                 case 8:
                     Canvas.SetTop(restRectangle, lineStart - lineGap * 2);
                     restRectangle.Fill = black;
@@ -1250,35 +1348,46 @@ namespace Microcontroller_Music
                     restRectangle.Fill = black;
                     break;
             }
+            //all images or rectangles are set to same x position so this can be done outside of the switch
             Canvas.SetLeft(restImage, barStart + (semiquaverwidth * rest.GetStart()) + (semiquaverwidth - noteHeadWidth) / 2);
             Canvas.SetLeft(restRectangle, barStart + (semiquaverwidth * rest.GetStart()) + (semiquaverwidth - noteHeadWidth) / 3);
+            //add both to the canvas, in any case only one will be visible
             canvas.Children.Add(restImage);
             canvas.Children.Add(restRectangle);
         }
 
+        //takes the note and finds how far from the bottom line of the stave it should be (in note positions, which are linegap / 2)
         public int FindLineDifferenceFromMiddleC(int pitch, bool treble)
         {
+            //middle c is 40, so this is the difference in pitch
             int distanceFromC = pitch - 40;
             int lineDiff;
+            //mod12 so that it can be placed into a dictionary to convert the semitone difference to a note position difference.
             int mod12 = distanceFromC % 12;
+            //makes sure mod12 is positive
             if (mod12 < 0)
             {
                 mod12 += 12;
             }
-
+            //adds how many octaves up to how many note positions up
             lineDiff = 7 * (int)Math.Round((distanceFromC - (mod12)) / 12.0) + pitchToNote[mod12];
+            //place it correctly on stave based on where middle c would be
             lineDiff = (treble) ? lineDiff - 3 : lineDiff + 9;
             return lineDiff;
         }
-        #endregion
 
-        #region scaling
+        #region UI Interactions
+        //scales the canvas
         public void Zoom(Canvas canvas, int chosenWidth)
         {
+            //makes a new width
             canvas.Width = chosenWidth;
+            //scales the height based on the old width and the preset width used when drawing
             double newHeight = ((double)chosenWidth / canvasWidth) * canvasHeight;
             canvas.Height = newHeight;
+            //scales the objects on the canvas to the new zoom
             canvas.RenderTransform = new ScaleTransform((double)chosenWidth / canvasWidth, (double)chosenWidth / canvasWidth);
+            //makes a rectangle and adds it to the background to prevent strange graphical errors
             Rectangle rectangle = new Rectangle
             {
                 Fill = white,
@@ -1288,9 +1397,8 @@ namespace Microcontroller_Music
             Canvas.SetZIndex(rectangle, -1);
             canvas.Children.Add(rectangle);
         }
-        #endregion
 
-        #region finding the mouse
+        //calls whereami using the mouse position given when clicking
         public bool FindMouseLeft(ref Canvas canvas, ref int trackIndex, ref int barIndex, ref int notePos, ref int pitch, int length, MouseButtonEventArgs e)
         {
             var position = e.GetPosition(canvas);
@@ -1298,45 +1406,51 @@ namespace Microcontroller_Music
             return worked;
         }
 
-        public bool FindMouseRight(ref Canvas canvas, ref int trackIndex, ref int barIndex, ref int notePos, ref int pitch, int length, MouseButtonEventArgs e)
-        {
-            var position = e.GetPosition(canvas);
-            bool worked = WhereAmI(ref trackIndex, ref barIndex, ref notePos, ref pitch, length, position);
-            return worked;
-        }
-
+        //calls whereami using the mouse position given when hovering
         public bool FindMouse(ref Canvas canvas, ref int trackIndex, ref int barIndex, ref int notePos, ref int pitch, int length, MouseEventArgs e)
         {
             var position = e.GetPosition(canvas);
             bool worked = WhereAmI(ref trackIndex, ref barIndex, ref notePos, ref pitch, length, position);
             return worked;
         }
+
+        //used to find the track, bar, pitch and semiquaver position of the mouse, as well as whether a note will fit there
         public bool WhereAmI(ref int trackIndex, ref int barIndex, ref int notePos, ref int pitch, int length, Point position)
         {
             //if statement to make sure notes can't be placed in the space at top of page, and extra linegap / 4 to make sure placement rules are consistent with
             //the other lines.
             if (position.Y < extraHeight + lineGap / 4)
             {
+                //no notes at top of page
                 return false;
             }
+            //calculate which line the user is on
             int line = (int)((position.Y - extraHeight) / lineHeight);
+            //calculate which track the line relates to
             trackIndex = line % totalInstruments;
+            //calculate which line group the user is on
             int lineIndex = (line - trackIndex) / totalInstruments;
+            //if it is after all the lines with bars on them stop here
             if (lineIndex > barsPerLine.Count)
             {
                 return false;
             }
+            //count up all the bars before the the line the user is on
             int barsBefore = 0;
             for (int i = 0; i < lineIndex; i++)
             {
                 barsBefore += barsPerLine[i];
             }
+            //get how many semiquavers into the line
             double xSemiPos = (position.X - reservedForTrackTitles) / semiquaverwidth;
             bool barFound = false;
+            //loop through all the bars in the line, right to left
             for (int i = barsPerLine[lineIndex] - 1; i >= 0; i--)
             {
+                //if the mouse is to the right of the bar start then the bar has been found
                 if (xSemiPos >= barStarts[barsBefore + i])
                 {
+                    //unless the mouse position is after the end of the bar, in which case it failed
                     if (xSemiPos - barStarts[barsBefore + i] > SongToDraw.GetTracks(trackIndex).GetBars(barsBefore + i).GetMaxLength())
                     {
                         return false;
@@ -1346,12 +1460,16 @@ namespace Microcontroller_Music
                     break;
                 }
             }
+            //if the bar was not found then fail out
             if (!barFound)
             {
                 return false;
             }
+            //subtract the start of the bar from mouse pos to get the semiquavers into the bar
             notePos = (int)Math.Floor(xSemiPos - barStarts[barIndex]);
+            //converts the note position of the pitch into a semitone position
             pitch = ReverseFindLineDifferenceFromMiddleC((int)position.Y - (lineStarts[lineIndex] + (lineHeight * (trackIndex)) + ((maxLinesAbove + 4) * lineGap)), SongToDraw.GetTracks(trackIndex).GetTreble());
+            //preview brush is set to a colour based on whether or not it can be placed
             SolidColorBrush previewBrush;
             if (SongToDraw.GetTracks(trackIndex).GetBars(barIndex).CheckFit(new Note(length, notePos, pitch)) != 0)
             {
@@ -1364,35 +1482,39 @@ namespace Microcontroller_Music
             {
                 previewBrush = black;
             }
+            //set preview note colour
             Preview.Fill = previewBrush;
+            //move the preview note to where the mouse is
             Canvas.SetLeft(Preview, barStarts[barIndex] * semiquaverwidth + reservedForTrackTitles + (semiquaverwidth * (notePos)) + (semiquaverwidth - noteHeadWidth) / 2);
             int previewPitch = FindLineDifferenceFromMiddleC(pitch, SongToDraw.GetTracks(trackIndex).GetTreble());
+            //if high/low enough, add preview ledger lines. see drawnote for how this works
             if (previewPitch > 7)
             {
+                //for each possible position, if note is above that, make the line visible
                 for (int i = 0; i < 4; i++)
                 {
                     if (previewPitch > 8 + 2 * i)
                     {
                         previewLines[i].Visibility = Visibility.Visible;
                     }
+                    //otherwise make it invisible
                     else
                     {
                         previewLines[i].Visibility = Visibility.Hidden;
                     }
+                    //set up some line properties
                     previewLines[i].Stroke = black;
                     previewLines[i].StrokeThickness = staveThickness;
-                    int leftShift = 0;
-                    if (length >= 16)
-                    {
-                        leftShift = 3;
-                    }
-                    previewLines[i].X1 = barStarts[barIndex] * semiquaverwidth + reservedForTrackTitles + (semiquaverwidth * notePos) + lineGap / 2 - 10 - leftShift + (semiquaverwidth - noteHeadWidth) / 2;
-                    previewLines[i].X2 = barStarts[barIndex] * semiquaverwidth + reservedForTrackTitles + semiquaverwidth * (notePos) + lineGap / 2 + noteHeadWidth - 3 - leftShift + (semiquaverwidth - noteHeadWidth) / 2;
+                    //move the line to be over the same x as the mouse
+                    previewLines[i].X1 = barStarts[barIndex] * semiquaverwidth + reservedForTrackTitles + (semiquaverwidth * notePos) + lineGap / 2 - 10 + (semiquaverwidth - noteHeadWidth) / 2;
+                    previewLines[i].X2 = barStarts[barIndex] * semiquaverwidth + reservedForTrackTitles + semiquaverwidth * (notePos) + lineGap / 2 + noteHeadWidth - 3 + (semiquaverwidth - noteHeadWidth) / 2;
+                    //adjust y accordingly
                     previewLines[i].Y1 = (lineStarts[lineIndex] + (lineHeight * (trackIndex)) + ((maxLinesAbove) * lineGap)) - lineGap / 2 - i * lineGap;
                     previewLines[i].Y2 = previewLines[i].Y1;
 
                 }
             }
+            //same as above but for below the stave
             else if (previewPitch < -1)
             {
                 for (int i = 0; i < 4; i++)
@@ -1407,17 +1529,14 @@ namespace Microcontroller_Music
                     }
                     previewLines[i].Stroke = black;
                     previewLines[i].StrokeThickness = staveThickness;
-                    int leftShift = 0;
-                    if (length >= 16)
-                    {
-                        leftShift = 3;
-                    }
-                    previewLines[i].X1 = barStarts[barIndex] * semiquaverwidth + reservedForTrackTitles + (semiquaverwidth * notePos) + lineGap / 2 - 10 - leftShift + (semiquaverwidth - noteHeadWidth) / 2;
-                    previewLines[i].X2 = barStarts[barIndex] * semiquaverwidth + reservedForTrackTitles + semiquaverwidth * (notePos) + lineGap / 2 + noteHeadWidth - 3 - leftShift + (semiquaverwidth - noteHeadWidth) / 2;
+                    //calculate start and end pints 
+                    previewLines[i].X1 = barStarts[barIndex] * semiquaverwidth + reservedForTrackTitles + (semiquaverwidth * notePos) + lineGap / 2 - 10 + (semiquaverwidth - noteHeadWidth) / 2;
+                    previewLines[i].X2 = barStarts[barIndex] * semiquaverwidth + reservedForTrackTitles + semiquaverwidth * (notePos) + lineGap / 2 + noteHeadWidth - 3 + (semiquaverwidth - noteHeadWidth) / 2;
                     previewLines[i].Y1 = lineStarts[lineIndex] + (lineHeight * (trackIndex)) + ((maxLinesAbove + 5.5) * lineGap) + i * lineGap;
                     previewLines[i].Y2 = previewLines[i].Y1;
                 }
             }
+            //if it is within the stave make all the ledger lines invisible
             else
             {
                 for (int i = 0; i < 4; i++)
@@ -1425,12 +1544,16 @@ namespace Microcontroller_Music
                     previewLines[i].Visibility = Visibility.Hidden;
                 }
             }
+            //set the preview note head to be at the right height for the mouse
             Canvas.SetTop(Preview, (lineStarts[lineIndex] + (lineHeight * (trackIndex)) + ((maxLinesAbove + 4) * lineGap)) - previewPitch * lineGap / 2 - lineGap / 4);
+            //rotate to make it look nice
             Preview.RenderTransform = new RotateTransform(-20);
+            //make it visible
             Preview.Visibility = Visibility.Visible;
             return true;
         }
 
+        //loops through all preview ledger lines and makes those and the note head invisible
         public void MakePreviewInvisible()
         {
             foreach (Line line in previewLines)
@@ -1440,26 +1563,35 @@ namespace Microcontroller_Music
             Preview.Visibility = Visibility.Hidden;
         }
 
+        //does FindDifferenceFromMiddleC backwards
         public int ReverseFindLineDifferenceFromMiddleC(double lineDiff, bool treble)
         {
+            //reverses changes made to adjust where middle c is in different keys
             lineDiff = (treble) ? -2 * lineDiff / lineGap + 3 : -2 * lineDiff / lineGap - 9;
+            //gets the note outside of octave
             double mod7 = lineDiff % 7;
             if (mod7 < 0)
             {
                 mod7 += 7;
             }
+            //runs mod7 backwards through the disctionary to find its semitone
             int mod12 = pitchToNote.First(x => x.Value == (int)mod7).Key;
+            //accounts for the += 12 in the forwards one
             if (lineDiff < 0)
             {
                 mod12 -= 12;
             }
+            //puts all the components together to reverse the effects of findlindifferencefrommiddlec
             return (int)((lineDiff - (lineDiff % 7)) / 7) * 12 + mod12 + 40;
         }
 
+        //returns the space reserved for the title - used for bitmap export
         public int GetTitleHeight(ref Canvas canvas)
         {
             return (int)(extraHeight * canvas.Width / canvasWidth);
         }
+
+        //calculates the height in pixels of the lines that would be put onto 1 page
         public int GetPageHeight(Canvas canvas)
         {
             if (totalLines * totalInstruments < 15)
