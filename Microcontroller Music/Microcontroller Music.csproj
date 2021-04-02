@@ -79,6 +79,9 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="AddRepeat.xaml.cs">
+      <DependentUpon>AddRepeat.xaml</DependentUpon>
+    </Compile>
     <Compile Include="BPMChange.xaml.cs">
       <DependentUpon>BPMChange.xaml</DependentUpon>
     </Compile>
@@ -105,6 +108,10 @@
     <Compile Include="TitleChange.xaml.cs">
       <DependentUpon>TitleChange.xaml</DependentUpon>
     </Compile>
+    <Page Include="AddRepeat.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="BPMChange.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

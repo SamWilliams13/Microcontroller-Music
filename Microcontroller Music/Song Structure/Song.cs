@@ -98,30 +98,6 @@ namespace Microcontroller_Music
             return TimeSigs[barIndex].top * (16 / TimeSigs[barIndex].bottom);
         }
 
-
-        #region repeats
-        //Makes an array of the parameters, adds them to the list of repeats and sorts it to fit the way it is handled in MIDIWriter.
-        public void AddRepeat(int bar1, int bar2, int noRepeats = 1)
-        {
-            //makes sure that the repeat makes sense
-            if (noRepeats > 0 && bar2 != bar1)
-            {
-                //makes sure bar1 is the start of the repeat.
-                if (bar1 > bar2)
-                {
-                    int temp = bar1;
-                    bar1 = bar2;
-                    bar2 = temp;
-                }
-
-            }
-            //makes all the bars consistent before adding a repeat so repeats cannot be added to bars that are not complete.
-            UpdateTotalBars();
-            int[] newRepeat = { bar1, bar2, noRepeats };
-            Repeats.Add(newRepeat);
-            Repeats.Sort();
-        }
-
         //makes sure that all tracks have the same number of bars. important for repeats and adding notes.
         public void UpdateTotalBars()
         {
@@ -195,22 +171,126 @@ namespace Microcontroller_Music
             } while (somethingChanged);
         }
 
-        //finds every repeat that starts at the given bar index and removes them from the list.
-        public void RemoveRepeat(int bar1)
+        #region repeats
+        //Makes an array of the parameters, adds them to the list of repeats and sorts it to fit the way it is handled in MIDIWriter.
+        public void AddRepeat(int bar1, int bar2, int noRepeats = 1)
         {
-            foreach (int[] repeat in Repeats)
+            //makes sure that the repeat makes sense
+            if (noRepeats > 0)
             {
-                if (repeat[0] == bar1)
+                //makes sure bar1 is the start of the repeat.
+                if (bar1 > bar2)
                 {
-                    Repeats.Remove(repeat);
+                    int temp = bar1;
+                    bar1 = bar2;
+                    bar2 = temp;
                 }
+
             }
+            //makes all the bars consistent before adding a repeat so repeats cannot be added to bars that are not complete.
+            UpdateTotalBars();
+            int[] newRepeat = { bar1, bar2, noRepeats };
+            Repeats.Add(newRepeat);
+            Repeats.Sort(repeatComparison);
         }
 
+        //describes how to compare repeats for sorting - look at the start bar
+        public static int repeatComparison(int[] one, int[] two)
+        {
+            if (one[0] >= one[1]) return 1;
+            else return -1;
+        }
+
+
+        //removes the bar at index
+        public void RemoveRepeat(int index)
+        {
+            if (index < Repeats.Count)
+            {
+                Repeats.RemoveAt(index);
+            }
+        }
         //returns the list of repeats
         public List<int[]> GetRepeats()
         {
             return Repeats;
+        }
+
+        //removes any repeats that start or end at bar index
+        public void RemoveProblematicRepeats(int index)
+        {
+            //do loop structure to catch all occurences when indexes change on removal
+            bool somethingChanged;
+            do
+            {
+                somethingChanged = false;
+                for (int i = 0; i < Repeats.Count; i++)
+                {
+                    //look at start and end of bar, compare them to index
+                    for (int j = 0; j < 2; j++)
+                    {
+                        if (Repeats[i][j] == index)
+                        {
+                            somethingChanged = true;
+                            RemoveRepeat(i);
+                        }
+                    }
+                }
+            } while (somethingChanged);
+        }
+
+        //if the final track is deleted, all repeats must go.
+        public void ClearRepeats()
+        {
+            Repeats.Clear();
+        }
+
+        //returns true when a repeat starts or ends on the note (startEnd determines whether it checks for starts or ends).
+        //used in drawing
+        public bool DoesARepeatStartorEndOn(int index, int startEnd)
+        {
+
+            for(int i = 0; i < Repeats.Count; i++)
+            {
+                if (Repeats[i][startEnd] == index)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        //used for the context menu - if it returns -1 a repeat can start there, otherwise the i value can be used in the delete tag
+        public int CanARepeatGoHere(int index)
+        {
+            //loop through all repeats
+            for (int i = 0; i < Repeats.Count; i++)
+            {
+                //if the bar index is in between repeat symbols, a new repeat cannot start here
+                if (Repeats[i][0] <= index && Repeats[i][1] >= index)
+                {
+                    return i;
+                }
+            }
+            return -1;
+        }
+            
+
+        //used to draw the number above the end repeat symbol when necessary
+        public int GetNumberOfRepeatsAtEndIndex(int endIndex)
+        {
+            //loop through repeats until the correct one is found
+            foreach (int[] repeat in Repeats)
+            {
+                //once the correct one is found
+                if (repeat[1] == endIndex)
+                {
+                    //give the number of repeats
+                    return repeat[2];
+                }
+            }
+            //shouldn't get here, but, if it does, just give the normal value.
+            return 1;
         }
 
         //returns the bpm
@@ -479,6 +559,7 @@ namespace Microcontroller_Music
                     t.DeleteBar(barIndex);
                 }
                 //remove a timesig and keysig from the lists
+                RemoveProblematicRepeats(barIndex);
                 TimeSigs.RemoveAt(barIndex);
                 KeySigs.RemoveAt(barIndex);
                 //update total bars for consistency.

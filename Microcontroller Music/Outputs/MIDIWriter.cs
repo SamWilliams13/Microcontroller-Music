@@ -60,16 +60,17 @@ namespace Microcontroller_Music
             List<int[]> repeats = new List<int[]>();
             //opens the chosen output device to allow for 
             if(!output.IsOpen) output.Open();
-            //the following lines are used so that the program can use a clone of the repeat list instead of a copy
-            //loop through all the repeats in the song
-            foreach (int[] r in songToConvert.GetRepeats())
-            {
-                //clone the repeat array and add it to a new list. no need to sort again - already sorted
-                repeats.Add((int[])r.Clone());
-            }
             //loop through each track. do one track completely before starting on the next one
             for (int i = 0; i < songToConvert.GetTrackCount(); i++)
             {
+                repeats.Clear();
+                //the following lines are used so that the program can use a clone of the repeat list instead of a copy
+                //loop through all the repeats in the song
+                foreach (int[] r in songToConvert.GetRepeats())
+                {
+                    //clone the repeat array and add it to a new list. no need to sort again - already sorted
+                    repeats.Add((int[])r.Clone());
+                }
                 //sets the channel that the track is going to be played on to the desired instrument.
                 output.SendProgramChange((Channel)i, instruments[i]);
                 //totalLength is to store the length of the song so far. This is added to after every bar so that the clock can have an idea of where it is

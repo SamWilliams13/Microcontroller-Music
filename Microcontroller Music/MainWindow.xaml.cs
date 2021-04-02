@@ -48,6 +48,8 @@ namespace Microcontroller_Music
         static readonly Label statusLabel = new Label();
         //a context menu that appears when you right click on the canvas
         private readonly ContextMenu contextMenu = new ContextMenu();
+        //boolean to track whether the user is in state of adding a repeat and where the repeat was started
+        private int repeatStart = -1;
 
         //makes a new window at launch
         public MainWindow()
@@ -504,6 +506,34 @@ namespace Microcontroller_Music
                 keySigChanger.Items.Add(selectableKeySig);
             }
             barMenu.Items.Add(keySigChanger);
+            //this one is for adding/removing repeats
+            MenuItem repeatHandler = new MenuItem();
+            int canIt = s.CanARepeatGoHere(bar);
+            //this means that there is no repeat present here
+            if (canIt == -1)
+            {
+                repeatHandler.Tag = bar;
+                //the repeat selection process is just beginning...
+                if (repeatStart == -1)
+                {
+                    repeatHandler.Header = "Start Repeat";
+                    repeatHandler.Click += new RoutedEventHandler(StartRepeat_Click);
+                }
+                //the repeat selection process has already begun
+                else
+                {
+                    repeatHandler.Header = "End Repeat";
+                    repeatHandler.Click += new RoutedEventHandler(EndRepeat_Click);
+                }
+            }
+            //include the repeat index as tag so it can be removed from the song when clicked.
+            else
+            {
+                repeatHandler.Tag = canIt;
+                repeatHandler.Header = "Delete Repeat";
+                repeatHandler.Click += new RoutedEventHandler(DeleteRepeat_Click);
+            }
+            barMenu.Items.Add(repeatHandler);
             return barMenu;
         }
 
@@ -601,6 +631,36 @@ namespace Microcontroller_Music
 
         }
 
+        //menu click - updates the state of repeatStart to hold the start of the note being created
+        private void StartRepeat_Click(object sender, RoutedEventArgs e)
+        {
+            repeatStart = Convert.ToInt32((sender as MenuItem).Tag);
+            GenerateErrorDialog("Adding repeat", "starting at bar " + (repeatStart + 1));
+        }
+
+        //menu click - adds a new repeat to the song using repeatStart and the bar just accessed
+        private void EndRepeat_Click(object sender, RoutedEventArgs e)
+        {
+            //get the bar index from tags
+            int repeatEnd = Convert.ToInt32((sender as MenuItem).Tag);
+            //get the number of repeats from dialog
+            AddRepeat addRepeat = new AddRepeat();
+            if(addRepeat.ShowDialog() == true)
+            {
+                s.AddRepeat(repeatStart, repeatEnd, addRepeat.GetRepeatCount());
+                repeatStart = -1;
+                drawer.DrawPage(ref SheetMusic, (int)Zoom.Value);
+            }
+        }
+
+        //menu click - removes the repeat that encapsulates the bar clicked on
+        private void DeleteRepeat_Click(object sender, RoutedEventArgs e)
+        {
+            int repeatIndex = Convert.ToInt32((sender as MenuItem).Tag);
+            s.RemoveRepeat(repeatIndex);
+            drawer.DrawPage(ref SheetMusic, (int)Zoom.Value);
+        }
+
         //menu click - calls insert bar at to add a new bar after the one selected - updates the canvas to reflect change
         private void InsertBarMenu_Click(object sender, RoutedEventArgs e)
         {
@@ -659,6 +719,16 @@ namespace Microcontroller_Music
                 {
                     //send the user to the same method called by add track in the song menu
                     AddTrack_Click(sender, e);
+                    //make the track look clear to user by deleting all but 1 bar
+                    if(s.GetTotalBars() > 1)
+                    {
+                        for(int i = 0; i < s.GetTotalBars(); i++)
+                        {
+                            s.DeleteBar(1);
+                        }
+                    }
+                    //if only one track left, all tracks must be removed
+                    s.ClearRepeats();
                     //then you can remove the track from the song
                     s.DeleteTrack(track);
                 }
@@ -754,6 +824,7 @@ namespace Microcontroller_Music
                     {
                         s.SetBPM(newBPM);
                         Bpm.Header = "BPM: " + newBPM;
+                        drawer.DrawPage(ref SheetMusic, (int)Zoom.Value);
                     }
                 }
                 //if it isn't a number, call an error

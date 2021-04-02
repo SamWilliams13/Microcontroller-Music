@@ -82,6 +82,12 @@ namespace Microcontroller_Music
         private readonly Line[] previewLines;
         //counts how many bars have been done in previous lines.
         private int barsDone = 0;
+        //list of bars where a repeat starts
+        private List<int> repeatStarts = new List<int>();
+        //list of bars where a repeat ends
+        private List<int> repeatEnds = new List<int>();
+        //height of the label for bpm
+        private int bpmHeight = 40;
         #endregion
 
         public Drawer(Song song)
@@ -171,15 +177,13 @@ namespace Microcontroller_Music
                 lineStarter += lineHeight * totalInstruments;
                 //draw the lines on the left of the page that go through multiple tracks
                 DrawTrackGroupingLine(ref canvas);
-                //this part loops through each instrument for the line
+                //bool to track if the repeat has been drawn. important for positioning the clef
                 for (currentInstrument = 0; currentInstrument < totalInstruments; currentInstrument++)
                 {
                     //linestart is a temporary variable that stores the y position of the bottom line of the stave
                     int lineStart = lineStarts[currentLine] + (lineHeight * currentInstrument) + ((maxLinesAbove + 4) * lineGap);
                     //barlength is the pixel length of the bar so far to draw in the bar dividers
                     int barLength = semiquaverwidth;
-                    //draw the clef at start of line
-                    DrawClef(ref canvas, lineStart);
                     //this part loops through each bar in a line
                     for (currentBarInLine = 0; currentBarInLine < barsPerLine[currentLine]; currentBarInLine++)
                     {
@@ -198,15 +202,96 @@ namespace Microcontroller_Music
                             drewTimeSig = true;
                             DrawTimeSig(ref canvas, lineStart, barStart);
                         }
+                        //if a repeat starts on this bar it must be added to the canvas
+                        if (repeatStarts.Contains(barsDone + currentBarInLine))
+                        {
+                            DrawRepeatStart(ref canvas, lineStart);
+                        }
+                        //same for repeat ending on the bar
+                        if (repeatEnds.Contains(barsDone + currentBarInLine))
+                        {
+                            DrawRepeatEnd(ref canvas, lineStart);
+                        }
                         DrawKeySig(ref canvas, lineStart, barStart, drewTimeSig);
                         //main part of this method. Draws all the notes, rests, beams etc.
                         DrawBar(ref canvas, currentBarInLine + barsDone, currentInstrument, currentLine);
                     }
+                    //draw the clef at start of line
+                    DrawClef(ref canvas, lineStart);
                     //draw the stave
                     DrawStaveLines(ref canvas, barLength);
                 }
                 //increase the number of bars done in previous lines so that the index of bar can be used when looping.
                 barsDone += barsPerLine[currentLine];
+            }
+        }
+
+        //draws the repeat symbol at the start of a bar
+        private void DrawRepeatStart(ref Canvas canvas, int lineStart)
+        {
+            Image repeatImage = new Image()
+            {
+                //find the image in the folder
+                Source = new BitmapImage(new Uri(exePath + "/source/repeatStart.png")),
+                //height of the stave
+                Height = 4 * lineGap
+            };
+            //if the first bar in the line, it cannot rely on the previous bar but is easier to calculate x
+            if (currentBarInLine == 0)
+            {
+                Canvas.SetLeft(repeatImage, reservedForTrackTitles);
+            }
+            //otherwise the x value is just immediately after the end of the previous bar
+            else
+            {
+                int startLeft = reservedForTrackTitles + (barStarts[barsDone + currentBarInLine - 1] + SongToDraw.GetTracks(0).GetBars(currentBarInLine + barsDone - 1).GetMaxLength() + 1) * semiquaverwidth;
+                if (repeatEnds.Contains(currentBarInLine + barsDone - 1)) startLeft += semiquaverwidth;
+                Canvas.SetLeft(repeatImage, startLeft);
+            }
+            //top is just enough up from linestart
+            Canvas.SetTop(repeatImage, lineStart - lineGap * 3.5);
+            //add to canvas
+            canvas.Children.Add(repeatImage);
+        }
+
+        //draws the repeat symbol at the end of a bar
+        private void DrawRepeatEnd(ref Canvas canvas, int lineStart)
+        {
+            Image repeatImage = new Image()
+            {
+                //find the image in the folder
+                Source = new BitmapImage(new Uri(exePath + "/source/repeatEnd.png")),
+                //height of the stave
+                Height = 4 * lineGap
+            };
+            //this doesn't change based on where it is on line, but has some number fudging to get it at the right place. cannot rely on barlengths as that includes the space before the bar starts
+            int canvasLeft = reservedForTrackTitles + (barStarts[barsDone + currentBarInLine] + SongToDraw.GetTracks(0).GetBars(currentBarInLine + barsDone).GetMaxLength() + 1) * semiquaverwidth + 8;
+            Canvas.SetLeft(repeatImage, canvasLeft);
+            //top is just enough up from linestart
+            Canvas.SetTop(repeatImage, lineStart - lineGap * 3.5);
+            //add to canvas
+            canvas.Children.Add(repeatImage);
+            //how many times it repeats - 1 less than how many times it plays
+            int numberAbove = SongToDraw.GetNumberOfRepeatsAtEndIndex(barsDone + currentBarInLine);
+            //if it repeats more than once it needs to display how many times
+            if(numberAbove > 1)
+            {
+                //label with properties so it appears properly
+                Label numRepeatLabel = new Label()
+                {
+                    Content = numberAbove.ToString(),
+                    Height = 100,
+                    Width = semiquaverwidth,
+                    HorizontalContentAlignment = HorizontalAlignment.Right,
+                    FontFamily = new FontFamily(titleFont),
+                    FontSize = 30,
+                    Foreground = black
+                };
+                //just above the repeat end symbol
+                Canvas.SetTop(numRepeatLabel, lineStart - 5.5* lineGap);
+                Canvas.SetLeft(numRepeatLabel, canvasLeft);
+                //add to canvas
+                canvas.Children.Add(numRepeatLabel);
             }
         }
 
@@ -418,6 +503,8 @@ namespace Microcontroller_Music
         //calculates where bars should be and how many per line and how much space they take up etc
         private void CalculateBarsPerLineEtc(ref Canvas canvas)
         {
+            repeatEnds.Clear();
+            repeatStarts.Clear();
             //sets the canvas width - equal to the maximum length of the bars on one line and the space to the left, and 2 semiquavers worth of space to the right
             canvasWidth = semiquaverwidth * maxLengthPerLine + reservedForTrackTitles + 2 * semiquaverwidth;
             //updates the total number of tracks in the song
@@ -443,6 +530,17 @@ namespace Microcontroller_Music
                 {
                     currentBarLength += 1;
                     changeTimeSig = true;
+                }
+                //if a repeat starts on the bar, some space is taken by the sign
+                if (SongToDraw.DoesARepeatStartorEndOn(i, 0))
+                {
+                    currentBarLength++;
+                    repeatStarts.Add(i);
+                }
+                if (SongToDraw.DoesARepeatStartorEndOn(i, 1))
+                {
+                    currentBarLength++;
+                    repeatEnds.Add(i);
                 }
                 //if it is the first bar or the key signature changes (not supported)
                 if ((i == 0) || (i > 0 &&
@@ -502,6 +600,8 @@ namespace Microcontroller_Music
                 //this can be done as the previous line adds nothing in this instance. however it needs to add enough space to fit the natural signs to get the signature back to 0.
                 if (changeKeySig && i > 0 && SongToDraw.GetKeySigs(i) == 0) barStarts[i] += (int)Math.Ceiling(Math.Abs(keySigWidthPerSign * SongToDraw.GetKeySigs(i - 1)));
                 if (changeTimeSig) barStarts[i] += 1;
+                //adds the extra space required for repeats
+                if (repeatStarts.Contains(i)) barStarts[i]++;
             }
             //add the final line to the list
             barsPerLine.Add(barsThisLine);
@@ -519,6 +619,9 @@ namespace Microcontroller_Music
         private void DrawClef(ref Canvas canvas, int lineStart)
         {
             Image clef = new Image();
+            //extra is used to move the clef to the right to fit the repeat sign in
+            int extra = 0;
+            if (repeatStarts.Contains(barsDone)) extra += semiquaverwidth;
             //if it's a treble clef
             if (SongToDraw.GetTracks(currentInstrument).GetTreble())
             {
@@ -528,7 +631,7 @@ namespace Microcontroller_Music
                 //must swirl around g
                 Canvas.SetTop(clef, lineStart - lineGap * 5 - 2);
                 //places the clef immediately after the padding
-                Canvas.SetLeft(clef, reservedForTrackTitles);
+                Canvas.SetLeft(clef, reservedForTrackTitles + extra);
                 //makes the clef appropriate size
                 clef.Height = lineGap * 7.5;
             }
@@ -541,7 +644,7 @@ namespace Microcontroller_Music
                 //must colon around f
                 Canvas.SetTop(clef, lineStart - lineGap * 3.5);
                 //offset the clef a bit to the right so the spacing looks ok
-                Canvas.SetLeft(clef, reservedForTrackTitles + 10);
+                Canvas.SetLeft(clef, reservedForTrackTitles + 10 + extra);
                 //bass clef is quite a bit smaller
                 clef.Height = lineGap * 3;
             }
@@ -657,7 +760,7 @@ namespace Microcontroller_Music
             }
         }
 
-        //draws the title at the top of the page
+        //draws the title at the top of the page, as well as BPM
         public void AddTitle(ref Canvas canvas)
         {
             //makes a label
@@ -674,7 +777,31 @@ namespace Microcontroller_Music
                 FontFamily = new FontFamily(titleFont),
                 FontSize = titleFontSize
             };
+            //shows the bpm (forced crotchets per minute)
+            Label bpmLabel = new Label
+            {
+                Content = "= " + SongToDraw.GetBPM(),
+                //makes it the right height and width and centres it.
+                Width = 3 * bpmHeight,
+                Height = bpmHeight,
+                HorizontalContentAlignment = HorizontalAlignment.Center,
+                //gives the text the right properties
+                Foreground = black,
+                FontFamily = new FontFamily(titleFont),
+                FontSize = 25
+            };
+            Canvas.SetLeft(bpmLabel, reservedForTrackTitles);
+            Canvas.SetTop(bpmLabel, extraHeight - bpmHeight);
+            Image crotchetPicture = new Image()
+            {
+                Source = new BitmapImage(new Uri(exePath + "/source/crotchet note.png")),
+                Height = bpmHeight
+            };
+            Canvas.SetLeft(crotchetPicture, reservedForTrackTitles);
+            Canvas.SetTop(crotchetPicture, extraHeight - bpmHeight);
             //adds it to the canvas.
+            canvas.Children.Add(crotchetPicture);
+            canvas.Children.Add(bpmLabel);
             canvas.Children.Add(songTitle);
         }
 
@@ -1044,12 +1171,11 @@ namespace Microcontroller_Music
             }
         }
 
+        //draws the head of the note and certain things surrounding it (staccato and accidental)
         //regarding the parameters:
         //canvas so you can add things to the image
         //barstart gives the x coord to add to to place the note
         //lineStart in this instance... it would be nice to give it as the E4 in treble and G2 in bass. then you can compare.
-
-        //draws the head of the note and certain things surrounding it (staccato and accidental)
         public void DrawNote(ref Canvas canvas, int barStart, int lineStart, int trackIndex, int barIndex, int noteIndex, bool drawAccidental, double startDisplacement)
         {
             //gets the note being drawn
@@ -1338,7 +1464,7 @@ namespace Microcontroller_Music
                     restImage.Source = new BitmapImage(new Uri(string.Concat(exePath, "\\source\\Crotchet.png"), UriKind.Absolute));
                     restImage.Height = lineGap * 3;
                     break;
-                    //if it is a minim or longer it must set the rectangle to be drawn and give it the right y position
+                //if it is a minim or longer it must set the rectangle to be drawn and give it the right y position
                 case 8:
                     Canvas.SetTop(restRectangle, lineStart - lineGap * 2);
                     restRectangle.Fill = black;
