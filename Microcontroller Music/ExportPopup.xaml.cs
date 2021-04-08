@@ -92,23 +92,25 @@ namespace Microcontroller_Music
                             Content = i
                         });
                     }
-                    buttonReadBox.Items.Add("LOW");
-                    buttonReadBox.Items.Add("HIGH");
-                    buttonReadBox.SelectedIndex = 0;
-                    buttonReadBox.Height = 20;
-                    buttonReadBox.Width = 422;
-                    buttonReadBox.Margin = new Thickness(142, 107, 0, 0);
-                    buttonReadLabel.Content = "Button Pin Read: ";
-                    buttonReadLabel.Margin = new Thickness(10, 103, 0, 0);
-                    buttonReadLabel.Height = 34;
-                    buttonReadLabel.Width = 100;
-                    buttonReadLabel.HorizontalAlignment = HorizontalAlignment.Left;
-                    buttonReadLabel.VerticalAlignment = VerticalAlignment.Top;
-                    buttonReadBox.HorizontalAlignment = HorizontalAlignment.Left;
-                    buttonReadBox.VerticalAlignment = VerticalAlignment.Top;
-                    MainGrid.Children.Add(buttonReadBox);
-                    MainGrid.Children.Add(buttonReadLabel);
-                    SpeakerPin.SelectedIndex = 9;
+                    MakeRead();
+                    break;
+                case 2:
+                    ButtonPin.Items.Add(new ComboBoxItem()
+                    {
+                        Content = "No Button"
+                    });
+                    for (int i = 0; i < 23; i++)
+                    {
+                        ButtonPin.Items.Add(new ComboBoxItem()
+                        {
+                            Content = i
+                        });
+                        SpeakerPin.Items.Add(new ComboBoxItem()
+                        {
+                            Content = i
+                        });
+                    }
+                    MakeRead();
                     break;
             }
             ButtonPin.SelectedIndex = 0;
@@ -146,6 +148,35 @@ namespace Microcontroller_Music
                 return (buttonReadBox.SelectedIndex == 1);
             }
             else return false;
+        }
+
+        public void MakeRead()
+        {
+            if (output == 1)
+            {
+                buttonReadBox.Items.Add("LOW");
+                buttonReadBox.Items.Add("HIGH");
+            }
+            else if (output == 2)
+            {
+                buttonReadBox.Items.Add("PULL_DOWN");
+                buttonReadBox.Items.Add("PULL_UP");
+            }
+            buttonReadBox.SelectedIndex = 0;
+            buttonReadBox.Height = 20;
+            buttonReadBox.Width = 422;
+            buttonReadBox.Margin = new Thickness(142, 107, 0, 0);
+            buttonReadLabel.Content = "Button Pin Read: ";
+            buttonReadLabel.Margin = new Thickness(10, 103, 0, 0);
+            buttonReadLabel.Height = 34;
+            buttonReadLabel.Width = 100;
+            buttonReadLabel.HorizontalAlignment = HorizontalAlignment.Left;
+            buttonReadLabel.VerticalAlignment = VerticalAlignment.Top;
+            buttonReadBox.HorizontalAlignment = HorizontalAlignment.Left;
+            buttonReadBox.VerticalAlignment = VerticalAlignment.Top;
+            MainGrid.Children.Add(buttonReadBox);
+            MainGrid.Children.Add(buttonReadLabel);
+            SpeakerPin.SelectedIndex = 9;
         }
     }
 }

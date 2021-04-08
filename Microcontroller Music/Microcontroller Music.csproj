@@ -102,6 +102,7 @@
     </Compile>
     <Compile Include="Outputs\MIDIWriter.cs" />
     <Compile Include="Outputs\BBCMicroPythonWriter.cs" />
+    <Compile Include="Outputs\PicoWriter.cs" />
     <Compile Include="Song Structure\Rest.cs" />
     <Compile Include="Song Structure\Song.cs" />
     <Compile Include="Song Structure\Track.cs" />

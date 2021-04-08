@@ -946,6 +946,7 @@ namespace Microcontroller_Music
         {
             microcontrollerOutput[0] = new BBCMicroPythonWriter(s);
             microcontrollerOutput[1] = new ArduinoWriter(s);
+            microcontrollerOutput[2] = new PicoWriter(s);
         }
     }
 }

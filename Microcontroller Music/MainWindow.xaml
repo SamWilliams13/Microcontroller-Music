@@ -71,6 +71,7 @@
                 <Separator/>
                 <MenuItem x:Name="BBCMPOut" Header="Micro:Bit - MicroPython" Click="Export_Click" Tag="0"/>
                 <MenuItem x:Name="ArduinoOut" Header="Arduino Uno - C++" Click="Export_Click" Tag="1"/>
+                <MenuItem x:Name="PicoOut" Header="Raspberry Pi Pico - MicroPython" Click="Export_Click" Tag="2"/>
             </MenuItem>
             <!--slider to zoom in and out-->
             <Slider x:Name="Zoom" Orientation="Horizontal" Value="1800" Maximum="3600" Minimum="100" ValueChanged="Zoom_ValueChanged" Width="100"/>
