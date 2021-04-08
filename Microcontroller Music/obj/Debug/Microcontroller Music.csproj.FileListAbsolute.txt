@@ -55,3 +55,5 @@ D:\Libraries\Documents\GitHub\Microcontroller-Music\Microcontroller Music\obj\De
 D:\Libraries\Documents\GitHub\Microcontroller-Music\Microcontroller Music\obj\Debug\BPMChange.baml
 D:\Libraries\Documents\GitHub\Microcontroller-Music\Microcontroller Music\obj\Debug\AddRepeat.g.cs
 D:\Libraries\Documents\GitHub\Microcontroller-Music\Microcontroller Music\obj\Debug\AddRepeat.baml
+D:\Libraries\Documents\GitHub\Microcontroller-Music\Microcontroller Music\obj\Debug\ExportPopup.g.cs
+D:\Libraries\Documents\GitHub\Microcontroller-Music\Microcontroller Music\obj\Debug\ExportPopup.baml

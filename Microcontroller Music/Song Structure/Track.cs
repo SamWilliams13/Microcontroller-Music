@@ -110,6 +110,12 @@ namespace Microcontroller_Music
             }
         }
 
+        //used to check if the previous bar needs to be redrawn too when a note is deleted
+        public bool ZeroNoteIsTied(int bar)
+        {
+            return Bars[bar].ZeroNoteIsTied();
+        }
+
         //creates a connection between 2 notes
         public void CreateConnection(int barIndex, int noteIndex, Symbol TieTo, bool Mode)
         {

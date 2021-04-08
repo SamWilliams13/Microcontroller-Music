@@ -83,11 +83,13 @@ namespace Microcontroller_Music
         //counts how many bars have been done in previous lines.
         private int barsDone = 0;
         //list of bars where a repeat starts
-        private List<int> repeatStarts = new List<int>();
+        private readonly List<int> repeatStarts = new List<int>();
         //list of bars where a repeat ends
-        private List<int> repeatEnds = new List<int>();
+        private readonly List<int> repeatEnds = new List<int>();
         //height of the label for bpm
-        private int bpmHeight = 40;
+        private readonly int bpmHeight = 40;
+        //contains all the notes and rests so they can be independently cleared
+        private readonly List<List<List<UIElement>>> barContents = new List<List<List<UIElement>>>();
         #endregion
 
         public Drawer(Song song)
@@ -274,7 +276,7 @@ namespace Microcontroller_Music
             //how many times it repeats - 1 less than how many times it plays
             int numberAbove = SongToDraw.GetNumberOfRepeatsAtEndIndex(barsDone + currentBarInLine);
             //if it repeats more than once it needs to display how many times
-            if(numberAbove > 1)
+            if (numberAbove > 1)
             {
                 //label with properties so it appears properly
                 Label numRepeatLabel = new Label()
@@ -288,7 +290,7 @@ namespace Microcontroller_Music
                     Foreground = black
                 };
                 //just above the repeat end symbol
-                Canvas.SetTop(numRepeatLabel, lineStart - 5.5* lineGap);
+                Canvas.SetTop(numRepeatLabel, lineStart - 5.5 * lineGap);
                 Canvas.SetLeft(numRepeatLabel, canvasLeft);
                 //add to canvas
                 canvas.Children.Add(numRepeatLabel);
@@ -509,7 +511,17 @@ namespace Microcontroller_Music
             canvasWidth = semiquaverwidth * maxLengthPerLine + reservedForTrackTitles + 2 * semiquaverwidth;
             //updates the total number of tracks in the song
             totalInstruments = SongToDraw.GetTrackCount();
-            //sets the height of each line to 
+            //make empty lists to store all the bar contents
+            barContents.Clear();
+            for (int i = 0; i < totalInstruments; i++)
+            {
+                barContents.Add(new List<List<UIElement>>());
+                for (int j = 0; j < SongToDraw.GetTotalBars(); j++)
+                {
+                    barContents[i].Add(new List<UIElement>());
+                }
+            }
+            //sets the height of each line
             lineHeight = (maxLinesAbove * 2 + 5) * lineGap;
             //barsthisline is used to store the value to be added to bars per line, while the number of bars that fit is being calculated.
             int barsThisLine = 0;
@@ -653,11 +665,43 @@ namespace Microcontroller_Music
         }
 
         //a function that loops through symbols in a bar, groups together notes as appropriate and calls other functions to draw stems, note heads and rests
-        public void DrawBar(ref Canvas canvas, int bar, int track, int line)
+        public void DrawBar(ref Canvas canvas, int bar, int track, int line = -1)
         {
+            //clears the bar on the canvas
+            if (barContents[track][bar].Count > 0)
+            {
+                foreach (UIElement uIElement in barContents[track][bar])
+                {
+                    canvas.Children.Remove(uIElement);
+                }
+                barContents[track][bar].Clear();
+            }
             //recalculate barStart for use in drawing methods.
             int barStart = reservedForTrackTitles + (barStarts[bar] * semiquaverwidth);
             //recalculate lineStart for use in drawing
+            //other parts of the program will not know which line they are looking at, so require this section to find it
+            if (line == -1)
+            {
+                bool barFound = false;
+                int iterator = 0;
+                int barsChecked = 0;
+                do
+                {
+                    //checks if the bar index is contained within the line
+                    if (bar < barsPerLine[iterator] + barsChecked)
+                    {
+                        line = iterator;
+                        barFound = true;
+                    }
+                    //otherwise increments the count
+                    else
+                    {
+                        barsChecked += barsPerLine[iterator];
+                        iterator++;
+                    }
+                    //carry on until found - prevents infinite loop but does not prevent crash
+                } while (!barFound && iterator < barsPerLine.Count);
+            }
             int lineStart = lineStarts[line] + (lineHeight * track) + ((maxLinesAbove + 4) * lineGap);
             //two separate lists referring to the same thing.
             //the first stores a list of all the notes that have appeared in the bar before
@@ -932,6 +976,7 @@ namespace Microcontroller_Music
                 Canvas.SetLeft(staccatoCircle, barStart + semiquaverwidth * startPoints[0] + semiquaverwidth / 2 - staccatoCircle.Width / 4);
                 if (highestPitch < 3 || Math.Abs(highestPitch - 3) < Math.Abs(lowestPitch - 3))
                 {
+                    lastBeamUp = true;
                     //stem goes up - draw line on right of notes; draw line from middle of lowest to an octave from highest -- unless lowest is more than an octave from middle line (3)
                     singleLine.X1 = barStart + semiquaverwidth * startPoints[0] + noteHeadWidth + 1 + (semiquaverwidth - noteHeadWidth) / 2;
                     singleLine.X2 = singleLine.X1;
@@ -952,12 +997,13 @@ namespace Microcontroller_Music
                     {
                         Canvas.SetTop(staccatoCircle, lineStart - (lowestPitch - 1) * lineGap / 2 + lineGap / 4);
                         canvas.Children.Add(staccatoCircle);
+                        barContents[trackIndex][barIndex].Add(staccatoCircle);
                     }
-                    lastBeamUp = true;
                 }
                 else
                 {
                     //stem goes down
+                    lastBeamUp = false;
                     //similar to above but with different values
                     //stem is to left of note instead of right
                     singleLine.X1 = barStart + semiquaverwidth * startPoints[0] + 4 + (semiquaverwidth - noteHeadWidth) / 2;
@@ -975,14 +1021,16 @@ namespace Microcontroller_Music
                     {
                         Canvas.SetTop(staccatoCircle, lineStart - (highestPitch + 2) * lineGap / 2 - lineGap / 4);
                         canvas.Children.Add(staccatoCircle);
+                        barContents[trackIndex][barIndex].Add(staccatoCircle);
                     }
-                    lastBeamUp = false;
                 }
                 Canvas.SetLeft(flag, singleLine.X1);
                 canvas.Children.Add(singleLine);
+                barContents[trackIndex][barIndex].Add(singleLine);
                 if (lengths[0] < 4)
                 {
                     canvas.Children.Add(flag);
+                    barContents[trackIndex][barIndex].Add(flag);
                 }
             }
             else if (SongToDraw.GetTracks(trackIndex).GetBars(barIndex).GetNotes(endIndex).GetLength() < 16)
@@ -1053,6 +1101,7 @@ namespace Microcontroller_Music
                 beam.Points.Add(new Point(p2.X, p2.Y - lineGap / 2));
                 beam.Points.Add(new Point(p1.X, p1.Y - lineGap / 2));
                 canvas.Children.Add(beam);
+                barContents[trackIndex][barIndex].Add(beam);
                 bool previousNoteWasSemi = false;
                 for (int i = 0; i <= endIndex - startIndex; i++)
                 {
@@ -1067,6 +1116,7 @@ namespace Microcontroller_Music
                     stem.Y1 = lineStart - (pitches[i]) * lineGap / 2;
                     stem.Y2 = lineStart - (beamDifference - beamGradient * startPoints[i] + beamUpAdjustment) * lineGap / 2;
                     canvas.Children.Add(stem);
+                    barContents[trackIndex][barIndex].Add(stem);
                     //handle staccatos
                     if (staccatos[i])
                     {
@@ -1077,18 +1127,19 @@ namespace Microcontroller_Music
                         };
                         staccatoCircle.Width = staccatoCircle.Height;
                         Canvas.SetLeft(staccatoCircle, barStart + semiquaverwidth * startPoints[i] + semiquaverwidth / 2 - staccatoCircle.Width / 4);
-                        if (lastBeamUp && (i == 0 || startPoints[i - 1] != startPoints[i]))
-                        {
-                            //draw a staccato below
-                            Canvas.SetTop(staccatoCircle, lineStart - (pitches[i] - 1) * lineGap / 2 + lineGap / 4);
-                            canvas.Children.Add(staccatoCircle);
-
-                        }
-                        if (!lastBeamUp && (i == startPoints.Length - 1 || startPoints[i + 1] != startPoints[i]))
+                        if (!lastBeamUp && (i == 0 || startPoints[i - 1] != startPoints[i]))
                         {
                             //draw staccato above
                             Canvas.SetTop(staccatoCircle, lineStart - (pitches[i] + 2) * lineGap / 2 - lineGap / 4);
                             canvas.Children.Add(staccatoCircle);
+                            barContents[trackIndex][barIndex].Add(staccatoCircle);
+                        }
+                        if (lastBeamUp && (i == startPoints.Length - 1 || startPoints[i + 1] != startPoints[i]))
+                        {
+                            //draw a staccato below
+                            Canvas.SetTop(staccatoCircle, lineStart - (pitches[i] - 1) * lineGap / 2 + lineGap / 4);
+                            canvas.Children.Add(staccatoCircle);
+                            barContents[trackIndex][barIndex].Add(staccatoCircle);
                         }
                     }
                     //add a second line for semiquavers and notes after dots.
@@ -1108,6 +1159,7 @@ namespace Microcontroller_Music
                         semiBeam.Points.Add(new Point(stem.X1 - noteHeadWidth, semiTopY - ((noteHeadWidth / (double)semiquaverwidth) * beamGradient) * lineGap / 2));
                         semiBeam.Points.Add(new Point(stem.X1 - noteHeadWidth, semiBottomY - ((noteHeadWidth / (double)semiquaverwidth) * beamGradient) * lineGap / 2));
                         canvas.Children.Add(semiBeam);
+                        barContents[trackIndex][barIndex].Add(semiBeam);
                     }
                     //handles the regular case where 2 or more semiuavers are grouped
                     else if (lengths[i] == 1 && startPoints[i + 1] != startPoints[i] && lengths[i + 1] == 1)
@@ -1129,6 +1181,7 @@ namespace Microcontroller_Music
                             semiBeamR.Points.Add(new Point(stem.X1 + noteHeadWidth, semiBottomY + ((noteHeadWidth / (double)semiquaverwidth) * beamGradient) * lineGap / 2));
                         }
                         canvas.Children.Add(semiBeamR);
+                        barContents[trackIndex][barIndex].Add(semiBeamR);
                     }
                     //handles when the note to the left isn't a semiquaver but neither is the one to the right so it has to go half to the right to 
                     else if (!previousNoteWasSemi && lengths[i] == 1 && startPoints[i + 1] != startPoints[i] && lengths[i + 1] != 1)
@@ -1142,6 +1195,7 @@ namespace Microcontroller_Music
                         semiBeamHalf.Points.Add(new Point(stem.X1 + noteHeadWidth, semiTopY + ((noteHeadWidth / (double)semiquaverwidth) * beamGradient) * lineGap / 2));
                         semiBeamHalf.Points.Add(new Point(stem.X1 + noteHeadWidth, semiBottomY + ((noteHeadWidth / (double)semiquaverwidth) * beamGradient) * lineGap / 2));
                         canvas.Children.Add(semiBeamHalf);
+                        barContents[trackIndex][barIndex].Add(semiBeamHalf);
                     }
                     if (lengths[i] == 0 && i < lengths.Length - 1 && startPoints[i + 1] != startPoints[i])
                     {
@@ -1167,6 +1221,7 @@ namespace Microcontroller_Music
                 {
                     Canvas.SetTop(staccatoCircle, lineStart - (lowestPitch - 1.5) * lineGap / 2);
                     canvas.Children.Add(staccatoCircle);
+                    barContents[trackIndex][barIndex].Add(staccatoCircle);
                 }
             }
         }
@@ -1213,6 +1268,7 @@ namespace Microcontroller_Music
             noteCircle.RenderTransform = new RotateTransform(-20);
             //add the note head to the canvas
             canvas.Children.Add(noteCircle);
+            barContents[trackIndex][barIndex].Add(noteCircle);
             //if it is a minim (or dotted) then draw a white sircle on top of the note to make it look hollow
             if (note.GetLength() >= 8 && note.GetLength() < 16)
             {
@@ -1230,6 +1286,7 @@ namespace Microcontroller_Music
                 minimGap.RenderTransform = new RotateTransform(-20);
                 //add to canvas
                 canvas.Children.Add(minimGap);
+                barContents[trackIndex][barIndex].Add(minimGap);
             }
             //if the note is a semibreve
             else if (note.GetLength() >= 16)
@@ -1253,6 +1310,7 @@ namespace Microcontroller_Music
                 semiBreveGap.RenderTransform = new RotateTransform(20);
                 //add to canvas
                 canvas.Children.Add(semiBreveGap);
+                barContents[trackIndex][barIndex].Add(semiBreveGap);
             }
             //if the note is dotted, dot it here
             if (drawDot)
@@ -1269,6 +1327,7 @@ namespace Microcontroller_Music
                 Canvas.SetTop(dottedNoteDot, lineStart - spaceDifferenceFromBottomLine * lineGap / 2 - lineGap / 4);
                 //add to canvas
                 canvas.Children.Add(dottedNoteDot);
+                barContents[trackIndex][barIndex].Add(dottedNoteDot);
             }
             //if it's high enough up some ledger lines need drawing
             if (spaceDifferenceFromBottomLine > 7)
@@ -1296,6 +1355,7 @@ namespace Microcontroller_Music
                     staveLine.Y2 = i;
                     //add the ledger line to canvas
                     canvas.Children.Add(staveLine);
+                    barContents[trackIndex][barIndex].Add(staveLine);
                 }
             }
             //same as above but with different loop so it can go down below the stave
@@ -1322,6 +1382,7 @@ namespace Microcontroller_Music
                     staveLine.Y2 = i;
                     //add the ledger line to canvas
                     canvas.Children.Add(staveLine);
+                    barContents[trackIndex][barIndex].Add(staveLine);
                 }
             }
             //if an accidental has to be drawn, draw it here
@@ -1354,6 +1415,7 @@ namespace Microcontroller_Music
                 //set the accidental to be just to the left of the note head and add it to canvas
                 Canvas.SetLeft(accidentalImage, barStart + (semiquaverwidth) * (note.GetStart() + startDisplacement));
                 canvas.Children.Add(accidentalImage);
+                barContents[trackIndex][barIndex].Add(accidentalImage);
             }
         }
 
@@ -1430,6 +1492,7 @@ namespace Microcontroller_Music
             connectionPath.Data = connectionPathGeometry;
             //add to canvas
             canvas.Children.Add(connectionPath);
+            barContents[track][bar].Add(connectionPath);
         }
 
         //draws a rest on canvas using an image
@@ -1480,6 +1543,8 @@ namespace Microcontroller_Music
             //add both to the canvas, in any case only one will be visible
             canvas.Children.Add(restImage);
             canvas.Children.Add(restRectangle);
+            barContents[trackIndex][barIndex].Add(restImage);
+            barContents[trackIndex][barIndex].Add(restRectangle);
         }
 
         //takes the note and finds how far from the bottom line of the stave it should be (in note positions, which are linegap / 2)

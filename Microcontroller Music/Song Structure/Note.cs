@@ -78,122 +78,124 @@ namespace Microcontroller_Music
         //returns the note as text in a similar fashion to what is needed in menus
         public override string SymbolAsText()
         {
-                string noteString = "";
-                int length = Length;
-                //if the note isn't a multiple of 2 then it must be dotted
-                if (Math.Log(length, 2) % 1 != 0)
-                {
-                    noteString += "Dotted ";
-                    length = (int)(length / 1.5);
-                }
-                //get the name of the note from its undotted length
-                switch (length)
-                {
-                    case 1:
-                        noteString += "Semiquaver ";
-                        break;
-                    case 2:
-                        noteString += "Quaver ";
-                        break;
-                    case 4:
-                        noteString += "Crotchet ";
-                        break;
-                    case 8:
-                        noteString += "Minim ";
-                        break;
-                    case 16:
-                        noteString += "Semibreve ";
-                        break;
-                }
-                //remove the accidental from the pitch to find its letter value
-                //also handle a few cases where flats or sharps don't exist for the note
-                int pitch = Pitch - Accidental;
-                int acc = Accidental;
-                int octLetter = pitch % 12;
-                switch (octLetter)
-                {
-                    case 1:
-                        noteString += "A";
-                        break;
-                    case 3:
-                        switch (acc)
-                        {
-                            case 1:
-                                noteString += "C";
-                                break;
-                            case 0:
-                                noteString += "B";
-                                break;
-                            case -1:
-                                noteString += "Bb";
-                                break;
-                        }
-                        break;
-                    case 4:
-                        switch (acc)
-                        {
-                            case 1:
-                                noteString += "C#";
-                                break;
-                            case 0:
-                                noteString += "C";
-                                break;
-                            case -1:
-                                noteString += "B";
-                                break;
-                        }
-                        break;
-                    case 6:
-                        noteString += "D";
-                        break;
-                    case 8:
-                        switch (acc)
-                        {
-                            case 1:
-                                noteString += "F";
-                                break;
-                            case 0:
-                                noteString += "E";
-                                break;
-                            case -1:
-                                noteString += "Eb";
-                                break;
-                        }
-                        break;
-                    case 9:
-                        switch (acc)
-                        {
-                            case 1:
-                                noteString += "F#";
-                                break;
-                            case 0:
-                                noteString += "F";
-                                break;
-                            case -1:
-                                noteString += "E";
-                                break;
-                        }
-                        break;
-                    case 11:
-                        noteString += "G";
-                        break;
-                }
-                //if the accidental isn't already handled then add it on here
-                if (octLetter != 3 && octLetter != 4 && octLetter != 8 && octLetter != 9)
-                {
-                    switch (Accidental)
+            string noteString = "";
+            int length = Length;
+            //if the note isn't a multiple of 2 then it must be dotted
+            if (Math.Log(length, 2) % 1 != 0)
+            {
+                noteString += "Dotted ";
+                length = (int)(length / 1.5);
+            }
+            //get the name of the note from its undotted length
+            switch (length)
+            {
+                case 1:
+                    noteString += "Semiquaver ";
+                    break;
+                case 2:
+                    noteString += "Quaver ";
+                    break;
+                case 4:
+                    noteString += "Crotchet ";
+                    break;
+                case 8:
+                    noteString += "Minim ";
+                    break;
+                case 16:
+                    noteString += "Semibreve ";
+                    break;
+            }
+            //remove the accidental from the pitch to find its letter value
+            //also handle a few cases where flats or sharps don't exist for the note
+            int pitch = Pitch - Accidental;
+            int acc = Accidental;
+            int octLetter = pitch % 12;
+            switch (octLetter)
+            {
+                case 1:
+                    noteString += "A";
+                    break;
+                case 3:
+                    switch (acc)
                     {
                         case 1:
-                            noteString += "#";
+                            noteString += "C";
+                            break;
+                        case 0:
+                            noteString += "B";
                             break;
                         case -1:
-                            noteString += "b";
+                            noteString += "Bb";
                             break;
                     }
+                    break;
+                case 4:
+                    switch (acc)
+                    {
+                        case 1:
+                            noteString += "C#";
+                            break;
+                        case 0:
+                            noteString += "C";
+                            break;
+                        case -1:
+                            noteString += "B";
+                            break;
+                    }
+                    break;
+                case 6:
+                    noteString += "D";
+                    break;
+                case 8:
+                    switch (acc)
+                    {
+                        case 1:
+                            noteString += "F";
+                            break;
+                        case 0:
+                            noteString += "E";
+                            break;
+                        case -1:
+                            noteString += "Eb";
+                            break;
+                    }
+                    break;
+                case 9:
+                    switch (acc)
+                    {
+                        case 1:
+                            noteString += "F#";
+                            break;
+                        case 0:
+                            noteString += "F";
+                            break;
+                        case -1:
+                            noteString += "E";
+                            break;
+                    }
+                    break;
+                case 11:
+                    noteString += "G";
+                    break;
+            }
+            //if the accidental isn't already handled then add it on here
+            if (octLetter != 3 && octLetter != 4 && octLetter != 8 && octLetter != 9)
+            {
+                switch (Accidental)
+                {
+                    case 1:
+                        noteString += "#";
+                        break;
+                    case -1:
+                        noteString += "b";
+                        break;
                 }
-                //then calculate which octave the note is in.
-                noteString = (Pitch % 12 >= 3) ? noteString + (((Pitch - Pitch % 12) / 12) + 1) : noteString + ((Pitch - Pitch % 12) / 12);
-                return noteString;
+            }
+            //then calculate which octave the note is in.
+            int temporaryValue = ((Pitch - Pitch % 12) / 12);
+            if (Pitch % 12 > 3) temporaryValue++;
+            noteString += temporaryValue;
+            return noteString;
         }
         #endregion
 
@@ -246,7 +248,7 @@ namespace Microcontroller_Music
         }
 
         //changes the pitch of the note. for intended use, this shouldn't cause any errors but may need to be returned to
-        public void SetPitch(int pitch) 
+        public void SetPitch(int pitch)
         {
             Pitch = pitch;
         }

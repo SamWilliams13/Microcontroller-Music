@@ -91,12 +91,17 @@
     <Compile Include="CreateTrackPopup.xaml.cs">
       <DependentUpon>CreateTrackPopup.xaml</DependentUpon>
     </Compile>
+    <Compile Include="ExportPopup.xaml.cs">
+      <DependentUpon>ExportPopup.xaml</DependentUpon>
+    </Compile>
     <Compile Include="GlobalSuppressions.cs" />
+    <Compile Include="Outputs\ArduinoWriter.cs" />
     <Compile Include="Outputs\Drawer.cs" />
     <Compile Include="MIDIDetails.xaml.cs">
       <DependentUpon>MIDIDetails.xaml</DependentUpon>
     </Compile>
     <Compile Include="Outputs\MIDIWriter.cs" />
+    <Compile Include="Outputs\BBCMicroPythonWriter.cs" />
     <Compile Include="Song Structure\Rest.cs" />
     <Compile Include="Song Structure\Song.cs" />
     <Compile Include="Song Structure\Track.cs" />
@@ -121,6 +126,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="CreateTrackPopup.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ExportPopup.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

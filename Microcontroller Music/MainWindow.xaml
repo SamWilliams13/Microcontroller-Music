@@ -58,13 +58,19 @@
                 <Separator/>
                 <MenuItem Header="_Save..." Click="SaveCurrentFile"/>
                 <MenuItem Header="_Save As..." Click="SaveCurrentFileAs"/>
-                <MenuItem Header="Export as Bitmap..." Click="BitmapExport_Click"/>
             </MenuItem>
             <MenuItem Header="_Song">
                 <!-- song has options to add track, change bpm and title-->
                 <MenuItem x:Name="AddTrack" Header="Add Track" Click="AddTrack_Click"/>
                 <MenuItem x:Name ="Bpm" Header="BPM: 120" Click="Bpm_Click"/>
                 <MenuItem x:Name="ChangeTitle"  Header="Change Title" Click="ChangeTitle_Click"/>
+            </MenuItem>
+            <!--Export menu - has options to output to microcontrollers and bitmap-->
+            <MenuItem Header="_Export">
+                <MenuItem Header="Bitmap" Click="BitmapExport_Click"/>
+                <Separator/>
+                <MenuItem x:Name="BBCMPOut" Header="Micro:Bit - MicroPython" Click="Export_Click" Tag="0"/>
+                <MenuItem x:Name="ArduinoOut" Header="Arduino Uno - C++" Click="Export_Click" Tag="1"/>
             </MenuItem>
             <!--slider to zoom in and out-->
             <Slider x:Name="Zoom" Orientation="Horizontal" Value="1800" Maximum="3600" Minimum="100" ValueChanged="Zoom_ValueChanged" Width="100"/>

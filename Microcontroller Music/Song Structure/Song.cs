@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using System.Runtime.Serialization;
 
 namespace Microcontroller_Music
@@ -191,11 +187,11 @@ namespace Microcontroller_Music
             UpdateTotalBars();
             int[] newRepeat = { bar1, bar2, noRepeats };
             Repeats.Add(newRepeat);
-            Repeats.Sort(repeatComparison);
+            Repeats.Sort(RepeatComparison);
         }
 
         //describes how to compare repeats for sorting - look at the start bar
-        public static int repeatComparison(int[] one, int[] two)
+        public static int RepeatComparison(int[] one, int[] two)
         {
             if (one[0] >= one[1]) return 1;
             else return -1;
@@ -293,6 +289,23 @@ namespace Microcontroller_Music
             return 1;
         }
 
+        //used to write certain microcontroller exports that are typed
+        public int GetNumberOfRepeatsAtStartIndex(int startIndex)
+        {
+            //loop through repeats until the correct one is found
+            foreach (int[] repeat in Repeats)
+            {
+                //once the correct one is found
+                if (repeat[0] == startIndex)
+                {
+                    //give the number of repeats
+                    return repeat[2];
+                }
+            }
+            //shouldn't get here, but, if it does, just give the normal value.
+            return 1;
+        }
+
         //returns the bpm
         public int GetBPM()
         {
@@ -359,6 +372,12 @@ namespace Microcontroller_Music
                 Tracks[track].AddNote(bar, n);
             }
             UpdateTotalBars();
+        }
+
+        //used to check if the previous bar needs to be redrawn too when a note is deleted
+        public bool ZeroNoteIsTied(int track, int bar)
+        {
+            return Tracks[track].ZeroNoteIsTied(bar);
         }
 
         //adds a new track to the song given all the necessary information
@@ -442,7 +461,15 @@ namespace Microcontroller_Music
         {
             if (CheckTrack(track))
             {
-                Tracks[track].CreateConnection(bar, noteIndex, TieTo, mode);
+                //error checking to prevent a note being connected across a repeat sign
+                if (Tracks[track].GetBars(bar).GetNotes(noteIndex).GetStart() >= TieTo.GetStart() && (DoesARepeatStartorEndOn(bar + 1, 0) || DoesARepeatStartorEndOn(bar, 1)))
+                {
+                    MainWindow.GenerateErrorDialog("Error", "A connection cannot be made across a repeat sign.");
+                }
+                else
+                {
+                    Tracks[track].CreateConnection(bar, noteIndex, TieTo, mode);
+                }
             }
         }
 

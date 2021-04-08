@@ -2,19 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using System.IO;
 using System.Runtime.Serialization;
-using System.Xml.Serialization;
 using System.Xml;
 using Microsoft.Win32;
 
@@ -26,13 +20,15 @@ namespace Microcontroller_Music
     public partial class MainWindow : Window
     {
         //the song the user is editing/listening to/exporting
-        public Song s;
+        private Song s;
         //the drawer that does all the canvas updating and tracking
-        public Drawer drawer;
+        private Drawer drawer;
         //a writer for the MIDI output
-        MIDIWriter writer;
+        private MIDIWriter writer;
+        //the array holding all microcontroller outputs - these are used identically by this class
+        private readonly Writer[] microcontrollerOutput = new Writer[5];
         //the filepath where the file is being saved
-        string filePath = "";
+        private string filePath = "";
         //the index of the track & bar the user touching
         private int track = -1;
         private int bar = -1;
@@ -166,6 +162,7 @@ namespace Microcontroller_Music
             s = (Song)serializer.ReadObject(memoryStream);
             //sets up all the outputs properly for the new song
             filePath = FilePath;
+            SetupExports();
             writer = new MIDIWriter(s);
             drawer = new Drawer(s);
             drawer.DrawPage(ref SheetMusic, 1800);
@@ -189,6 +186,7 @@ namespace Microcontroller_Music
             //sets up the first track as requested
             s.NewTrack(track1title, keySig, top, bottom, key);
             //sets up outputs
+            SetupExports();
             writer = new MIDIWriter(s);
             drawer = new Drawer(s);
             drawer.DrawPage(ref SheetMusic, 1800);
@@ -276,7 +274,16 @@ namespace Microcontroller_Music
                         //try to add the note to the song
                         s.AddNote(track, bar, new Note(noteLength, semipos, pitch));
                         //redraw the song to reflect the changes
-                        drawer.DrawPage(ref SheetMusic, (int)Zoom.Value);
+                        //if it might create a new bar then update the whole canvas
+                        if (semipos + noteLength >= s.GetTracks(0).GetBars(bar).GetMaxLength() && bar == s.GetTotalBars() - 2)
+                        {
+                            drawer.DrawPage(ref SheetMusic, (int)Zoom.Value);
+                        }
+                        //otherwise just update the bar
+                        else
+                        {
+                            drawer.DrawBar(ref SheetMusic, bar, track);
+                        }
                     }
                 }
             }
@@ -635,7 +642,16 @@ namespace Microcontroller_Music
         private void StartRepeat_Click(object sender, RoutedEventArgs e)
         {
             repeatStart = Convert.ToInt32((sender as MenuItem).Tag);
-            GenerateErrorDialog("Adding repeat", "starting at bar " + (repeatStart + 1));
+            //if statement to prevent repeats splitting connections.
+            if (s.ZeroNoteIsTied(track, bar))
+            {
+                GenerateErrorDialog("Error", "A repeat cannot be started here as it splits a connection.");
+                repeatStart = -1;
+            }
+            else
+            {
+                GenerateErrorDialog("Adding repeat", "starting at bar " + (repeatStart + 1));
+            }
         }
 
         //menu click - adds a new repeat to the song using repeatStart and the bar just accessed
@@ -643,13 +659,20 @@ namespace Microcontroller_Music
         {
             //get the bar index from tags
             int repeatEnd = Convert.ToInt32((sender as MenuItem).Tag);
-            //get the number of repeats from dialog
-            AddRepeat addRepeat = new AddRepeat();
-            if(addRepeat.ShowDialog() == true)
+            if (repeatEnd < s.GetTotalBars() - 1 && s.ZeroNoteIsTied(track, bar + 1))
             {
-                s.AddRepeat(repeatStart, repeatEnd, addRepeat.GetRepeatCount());
-                repeatStart = -1;
-                drawer.DrawPage(ref SheetMusic, (int)Zoom.Value);
+                GenerateErrorDialog("Error", "A repeat cannot be started here as it splits a connection.");
+            }
+            else
+            {
+                //get the number of repeats from dialog
+                AddRepeat addRepeat = new AddRepeat();
+                if (addRepeat.ShowDialog() == true)
+                {
+                    s.AddRepeat(repeatStart, repeatEnd, addRepeat.GetRepeatCount());
+                    repeatStart = -1;
+                    drawer.DrawPage(ref SheetMusic, (int)Zoom.Value);
+                }
             }
         }
 
@@ -705,7 +728,7 @@ namespace Microcontroller_Music
                 s.CreateConnection(track, bar, noteIndex, producer.Tag as Symbol, true);
             }
             //update canvas to reflect the change
-            drawer.DrawPage(ref SheetMusic, (int)Zoom.Value);
+            drawer.DrawBar(ref SheetMusic, bar, track);
         }
 
         //menu click - deletes the selected track
@@ -759,7 +782,7 @@ namespace Microcontroller_Music
         {
             s.ToggleStaccato(track, bar, noteIndex);
             //update canvas to reflect change
-            drawer.DrawPage(ref SheetMusic, (int)Zoom.Value);
+            drawer.DrawBar(ref SheetMusic, track, bar);
         }
 
         //menu click - changes the accidental of the selected note
@@ -779,14 +802,18 @@ namespace Microcontroller_Music
                 s.ChangeAccidental(track, bar, noteIndex, -1);
             }
             //update canvas to reflect the changes
-            drawer.DrawPage(ref SheetMusic, (int)Zoom.Value);
+            drawer.DrawBar(ref SheetMusic, bar, track);
         }
 
         //menu click - deletes the selected note and updates the canvas to reflect the change
         private void DeleteClick(object sender, RoutedEventArgs e)
         {
             s.DeleteNote(track, bar, noteIndex);
-            drawer.DrawPage(ref SheetMusic, (int)Zoom.Value);
+            if(s.ZeroNoteIsTied(track, bar))
+            {
+                drawer.DrawBar(ref SheetMusic, bar - 1, track);
+            }
+            drawer.DrawBar(ref SheetMusic, bar, track);
         }
 
         //menu click - adds a track to the song
@@ -906,6 +933,19 @@ namespace Microcontroller_Music
                 //zoom it out back to where it was
                 drawer.Zoom(SheetMusic, (int)Zoom.Value);
             }
+        }
+
+        //writes the code for a microcontroller defined by the tag of the menu item chosen
+        private void Export_Click(object sender, RoutedEventArgs e)
+        {
+            microcontrollerOutput[Convert.ToInt32((sender as MenuItem).Tag)].Write();
+        }
+
+        //sets up all the microcontroller writers stored in the array
+        public void SetupExports()
+        {
+            microcontrollerOutput[0] = new BBCMicroPythonWriter(s);
+            microcontrollerOutput[1] = new ArduinoWriter(s);
         }
     }
 }

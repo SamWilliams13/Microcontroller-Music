@@ -1,11 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using Microcontroller_Music;
-using System.IO;
 using System.Runtime.Serialization;
 
 namespace Microcontroller_Music
@@ -115,6 +109,21 @@ namespace Microcontroller_Music
                 else return null;
             }
             else return null;
+        }
+
+        //used to check if the previous bar needs to be redrawn too when a note is deleted
+        public bool ZeroNoteIsTied()
+        {
+            bool tied = false;
+            foreach (Symbol n in Notes)
+            {
+                if(n is Note && (n as Note).GetTiedTo() != null && n.GetStart() == 0)
+                {
+                    tied = true;
+                    break;
+                }
+            }
+            return tied;
         }
         #endregion
 
@@ -500,11 +509,11 @@ namespace Microcontroller_Music
                 //higher pitch comes first
                 if (pitchOne >= pitchTwo)
                 {
-                    return 1;
+                    return -1;
                 }
                 else
                 {
-                    return -1;
+                    return 1;
                 }
             }
             //later start == larger, larger values come later in list
