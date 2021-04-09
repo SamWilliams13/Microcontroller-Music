@@ -26,7 +26,7 @@ namespace Microcontroller_Music
         //a writer for the MIDI output
         private MIDIWriter writer;
         //the array holding all microcontroller outputs - these are used identically by this class
-        private readonly Writer[] microcontrollerOutput = new Writer[5];
+        private readonly Writer[] microcontrollerOutput = new Writer[3];
         //the filepath where the file is being saved
         private string filePath = "";
         //the index of the track & bar the user touching
