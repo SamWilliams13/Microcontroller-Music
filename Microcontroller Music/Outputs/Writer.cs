@@ -67,7 +67,7 @@ namespace Microcontroller_Music
                 //if they start at the end of the previous symbol then add them to the list (this means only the highest concurrent pitch is added)
                 if (notes[i].GetStart() == semiPos)
                 {
-                    GenerateNoteFrequency(notes[i], track, bar, ref barsIntoFuture, ref semiPos, ref frequencyList);
+                    GenerateNoteFrequency(notes[i], i, track, bar, ref barsIntoFuture, ref semiPos, ref frequencyList);
                 }
                 //if the bar has ended already then subtract 1 from barsIntoFuture so the higher up method sees it has to skip that many more bars
                 if (barsIntoFuture > 0)
@@ -87,7 +87,7 @@ namespace Microcontroller_Music
         }
 
         //adds the specific symbol's frequency, duration and rest duration to the 1d list
-        protected void GenerateNoteFrequency(Symbol n, int track, int bar, ref int barsIntoFuture, ref int semiPos, ref List<int> frequencyList, bool continuation = false, int length = 0)
+        protected void GenerateNoteFrequency(Symbol n, int symbol, int track, int bar, ref int barsIntoFuture, ref int semiPos, ref List<int> frequencyList, bool continuation = false, int length = 0)
         {
             //calculate the length of a semiquaver, it is 1 minute divided by the semiquavers per minute (bpm * 4)
             int semiTime = 60000 / (songToConvert.GetBPM() * 4);
@@ -118,7 +118,7 @@ namespace Microcontroller_Music
                 if (note.GetTie() != null && (note.GetTie() as Note).GetPitch() == note.GetPitch())
                 {
                     //call the method again, saying it is a continuation and giving it the length that has already played
-                    GenerateNoteFrequency(note.GetTie(), track, bar, ref barsIntoFuture, ref semiPos, ref frequencyList, true, length);
+                    GenerateNoteFrequency(note.GetTie(), symbol, track, bar, ref barsIntoFuture, ref semiPos, ref frequencyList, true, length);
                 }
                 //if it is a slur
                 else if(note.GetTie() != null && (note.GetTie() as Note).GetPitch() != note.GetPitch())
@@ -149,19 +149,38 @@ namespace Microcontroller_Music
             else
             {
                 Rest rest = n as Rest;
-                //add 0 as the frequency as it can be handled by program to play nothing
-                frequencyList.Add(0);
-                //be silent for full length of rest
-                frequencyList.Add(rest.GetLength() * semiTime);
-                //another 0 to make sure that 3 spaces are taken up by each symbol
-                frequencyList.Add(0);
                 //update the semiPos to look at the end of the rest
                 semiPos = rest.GetStart() + rest.GetLength();
+                length += rest.GetLength();
                 //if that was the end of the bar, move the semiPos into the next bar and update barsIntoFuture to reflect that
                 if (semiPos >= songToConvert.GetTracks(track).GetBars(bar + barsIntoFuture).GetMaxLength())
                 {
                     semiPos -= songToConvert.GetTracks(track).GetBars(bar + barsIntoFuture).GetMaxLength();
                     barsIntoFuture++;
+                    symbol = -1;
+                }
+                //makes sure that rests that are grouped together will be stored as one
+                Symbol nextNote = null;
+                //if statement prevents the program from trying to find bars that don't exist
+                if (symbol != -1 || bar + barsIntoFuture < songToConvert.GetTotalBars())
+                {
+                    nextNote = songToConvert.GetTracks(track).GetBars(bar + barsIntoFuture).GetNotes(symbol + 1);
+                }
+                //if the next note in the track is also a rest then they can be grouped
+                if (nextNote is Rest)
+                {
+                    //calls itself to extend the length of the time. saves some space, especially if there is a lot of silence at the start of a track.
+                    GenerateNoteFrequency(nextNote, symbol + 1, track, bar, ref barsIntoFuture, ref semiPos, ref frequencyList, true, length);
+                }
+                //otherwise add the length of what has already been grouped.
+                else
+                {
+                    //add 0 as the frequency as it can be handled by program to play nothing
+                    frequencyList.Add(0);
+                    //be silent for full length of rest
+                    frequencyList.Add(length * semiTime);
+                    //another 0 to make sure that 3 spaces are taken up by each symbol
+                    frequencyList.Add(0);
                 }
             }
         }
