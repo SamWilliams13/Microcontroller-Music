@@ -90,7 +90,7 @@ namespace Microcontroller_Music
         protected void GenerateNoteFrequency(Symbol n, int symbol, int track, int bar, ref int barsIntoFuture, ref int semiPos, ref List<int> frequencyList, bool continuation = false, int length = 0)
         {
             //calculate the length of a semiquaver, it is 1 minute divided by the semiquavers per minute (bpm * 4)
-            int semiTime = 60000 / (songToConvert.GetBPM() * 4);
+            double semiTime = 60000 / (songToConvert.GetBPM() * 4);
             //if the symbol is a note
             if (n is Note)
             {
@@ -124,7 +124,7 @@ namespace Microcontroller_Music
                 else if(note.GetTie() != null && (note.GetTie() as Note).GetPitch() != note.GetPitch())
                 {
                     //make it so the note plays its full length
-                    frequencyList.Add(length * semiTime);
+                    frequencyList.Add((int)(length * semiTime));
                     //and therefore there is no silence after
                     frequencyList.Add(0);
                 }
@@ -132,17 +132,17 @@ namespace Microcontroller_Music
                 else if(note.GetStaccato())
                 {
                     //the note plays the full length of any previous tied notes but only plays half of the current note length
-                    frequencyList.Add((length - note.GetLength()) * semiTime + (note.GetLength() * semiTime / 2));
+                    frequencyList.Add((int)Math.Ceiling((double)(length - note.GetLength()) * semiTime + (note.GetLength() * semiTime / 2.0)));
                     //and is therefore silent for half of the current note length
-                    frequencyList.Add(note.GetLength() * semiTime / 2);
+                    frequencyList.Add((int)Math.Floor((double)note.GetLength() * semiTime / 2.0));
                 }
                 //if it is just a normal note
                 else
                 {
                     //play the full length of previous tied notes and 7/8 of the current note
-                    frequencyList.Add((length - note.GetLength()) * semiTime + (note.GetLength() * semiTime * 7 / 8));
+                    frequencyList.Add((int)Math.Ceiling((double)(length - note.GetLength()) * semiTime + (note.GetLength() * semiTime * 7.0 / 8.0)));
                     //therefore silent for 1/8 of the length of the current note. this is what makes the notes sound separate
-                    frequencyList.Add(note.GetLength() * semiTime / 8);
+                    frequencyList.Add((int)Math.Floor(note.GetLength() * semiTime / 8.0));
                 }
             }
             //otherwise the note is a rest, in which case it need not care about ties and staccato and frequency
@@ -178,7 +178,7 @@ namespace Microcontroller_Music
                     //add 0 as the frequency as it can be handled by program to play nothing
                     frequencyList.Add(0);
                     //be silent for full length of rest
-                    frequencyList.Add(length * semiTime);
+                    frequencyList.Add((int)(length * semiTime));
                     //another 0 to make sure that 3 spaces are taken up by each symbol
                     frequencyList.Add(0);
                 }
