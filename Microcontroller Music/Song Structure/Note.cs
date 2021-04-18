@@ -1,12 +1,4 @@
-﻿using Microsoft.Win32;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microcontroller_Music;
-using System.IO;
-using System.Xml;
+﻿using System;
 using System.Runtime.Serialization;
 
 namespace Microcontroller_Music
@@ -245,12 +237,6 @@ namespace Microcontroller_Music
             Pitch += (accidental - Accidental);
             //replaces the old accidental with the new one 
             Accidental = accidental;
-        }
-
-        //changes the pitch of the note. for intended use, this shouldn't cause any errors but may need to be returned to
-        public void SetPitch(int pitch)
-        {
-            Pitch = pitch;
         }
         #endregion
     }

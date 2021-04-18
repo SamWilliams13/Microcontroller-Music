@@ -237,6 +237,7 @@ namespace Microcontroller_Music
         public void ChangeTimeSig(int newLength)
         {
             MaxLength = newLength;
+            FixSpacing(true);
         }
 
         //deletes all the rests in the bar and calculates new ones.

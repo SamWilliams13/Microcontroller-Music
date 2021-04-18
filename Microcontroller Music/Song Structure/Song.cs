@@ -110,10 +110,10 @@ namespace Microcontroller_Music
                     //update total bars
                     //update timesigs
                     //update keysigs
-                    if (t.GetBars().Count > totalBars)
+                    if (t.GetBarCount() > totalBars)
                     {
                         somethingChanged = true;
-                        totalBars = t.GetBars().Count;
+                        totalBars = t.GetBarCount();
                         TimeSig newSig;
                         int newKeySig;
                         if (TimeSigs.Count > 0)
@@ -126,7 +126,7 @@ namespace Microcontroller_Music
                             newKeySig = KeySigs[KeySigs.Count - 1];
                         }
                         else newKeySig = 0;
-                        for (int j = TimeSigs.Count; j < t.GetBars().Count; j++)
+                        for (int j = TimeSigs.Count; j < t.GetBarCount(); j++)
                         {
                             TimeSigs.Add(newSig);
                             KeySigs.Add(newKeySig);
@@ -134,10 +134,10 @@ namespace Microcontroller_Music
                     }
                     //if there are less bars in the track than the song thinks there should be
                     //add bars until it is the right length
-                    else if (t.GetBars().Count < totalBars)
+                    else if (t.GetBarCount()< totalBars)
                     {
                         somethingChanged = true;
-                        for (int j = 0; j < totalBars - t.GetBars().Count; j++)
+                        for (int j = 0; j < totalBars - t.GetBarCount(); j++)
                         {
                             t.NewBar();
                         }
@@ -157,7 +157,7 @@ namespace Microcontroller_Music
                             //if the length of the bar does not reflect the timesig, update the length of the timesig so it does.
                             if (GetSigLength(i) != t.GetBars(i).GetMaxLength())
                             {
-                                t.ChangeTimeSig(i, GetSigLength(i));
+                                t.ChangeBarLength(i, GetSigLength(i));
                                 somethingChanged = true;
                             }
                         }

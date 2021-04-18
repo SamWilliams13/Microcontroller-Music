@@ -31,23 +31,6 @@ namespace Microcontroller_Music
             return StartPoint;
         }
 
-        //sets the length, given that it is not too long
-        public void SetLength(int length) 
-        {
-            //this should never be true, but is here just in case. The program does not support breves, longs or larges
-            //condition stops the program from adding a note longer than a semibreve to the track
-            if (Length > 16) 
-            {
-                //tells the user something has gone wrong
-                MainWindow.GenerateErrorDialog("Internal Error", "The length of this note has been set too long to be represented"); 
-            }
-            else
-            {
-                //changes note length
-                Length = length; 
-            }
-        }
-
         //returns a string descriptor of the note.
         public abstract string SymbolAsText();
     }

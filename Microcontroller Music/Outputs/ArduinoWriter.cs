@@ -8,19 +8,19 @@ namespace Microcontroller_Music
     class ArduinoWriter : Writer
     {
         //where file is stored
-        string filePath;
+        private string filePath;
         //text to store in file
-        string textOut;
+        private string textOut;
         //pin for buzzer
-        int pin = 11;
+        private int pin = 11;
         //track in song to play
-        int track = 0;
+        private int track = 0;
         //extra close bracked and new line for when a button is used. placed at end of file.
-        string buttonAdjustment = "\n}";
+        private string buttonAdjustment = "\n}";
         //pin for button
-        int buttonNumber = 13;
+        private int buttonNumber = 13;
         //whether reading HIGH or LOW means the button has been pressed. false is low, true is high.
-        bool buttonHigh = false;
+        private bool buttonHigh = false;
 
         //constructor just calls base
         public ArduinoWriter(Song s) : base(s)

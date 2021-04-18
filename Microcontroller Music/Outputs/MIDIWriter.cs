@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using Midi;
 
 namespace Microcontroller_Music
@@ -10,18 +6,27 @@ namespace Microcontroller_Music
     class MIDIWriter : Writer
     {
         //array of instruments so that each track can be played on a different instrument
-        Instrument[] instruments;
+        private Instrument[] instruments;
         //device used to play the MIDI - Microsoft Wavetable GS Synth tends to be the default
         private OutputDevice output;
 
         //used to schedule all notes before they are played. no need to have threading and sleep.
-        private readonly Clock clock;
+        private Clock clock;
         //constructor - calls base to set memory address of song to songToConvert.
         public MIDIWriter(Song s) : base(s)
         {
             //initialises the clock with the correct BPM for the song
             clock = new Clock(songToConvert.GetBPM());
             //sets up the clock
+        }
+
+        //called when the tempo changes so it can play at the right speed
+        public void UpdateBPM()
+        {
+            //must stop music or this will fail
+            Stop();
+            //clock has to be remade with the right tempo
+            clock = new Clock(songToConvert.GetBPM());
         }
 
         //opens a dialog box and gets some info from the user, then starts the writing process
@@ -76,7 +81,7 @@ namespace Microcontroller_Music
                 //totalLength is to store the length of the song so far. This is added to after every bar so that the clock can have an idea of where it is
                 float totalLength = 0;
                 //loop through all bars in the track
-                for (int j = 0; j < songToConvert.GetTracks(i).GetBars().Count; j++)
+                for (int j = 0; j < songToConvert.GetTotalBars(); j++)
                 {
                     //get the notes in the bar
                     List<Symbol> barNotes = songToConvert.GetTracks(i).GetBars(j).GetNotes();

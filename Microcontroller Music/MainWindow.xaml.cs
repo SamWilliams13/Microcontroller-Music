@@ -350,6 +350,11 @@ namespace Microcontroller_Music
             //if they select one then open the file and update bpm button to reflect new bpm
             if (fileOpen.ShowDialog() == true)
             {
+                if (Play_Button.Content.ToString() == "Stop")
+                {
+                    writer.Stop();
+                    Play_Button.Content = "Play";
+                }
                 OpenFile(fileOpen.FileName);
                 Bpm.Header = "BPM: " + s.GetBPM();
             }
@@ -808,8 +813,9 @@ namespace Microcontroller_Music
         //menu click - deletes the selected note and updates the canvas to reflect the change
         private void DeleteClick(object sender, RoutedEventArgs e)
         {
+            bool redrawPrevious = s.ZeroNoteIsTied(track, bar);
             s.DeleteNote(track, bar, noteIndex);
-            if(s.ZeroNoteIsTied(track, bar))
+            if(redrawPrevious)
             {
                 drawer.DrawBar(ref SheetMusic, bar - 1, track);
             }
@@ -852,6 +858,9 @@ namespace Microcontroller_Music
                         s.SetBPM(newBPM);
                         Bpm.Header = "BPM: " + newBPM;
                         drawer.DrawPage(ref SheetMusic, (int)Zoom.Value);
+                        //update the midi player
+                        Play_Button.Content = "Play";
+                        writer.UpdateBPM();
                     }
                 }
                 //if it isn't a number, call an error

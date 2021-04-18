@@ -8,19 +8,19 @@ namespace Microcontroller_Music
     class PicoWriter : Writer
     {
         //where file is stored
-        string filePath;
+        private string filePath;
         //text to store in file
-        string textOut;
+        private string textOut;
         //pin for buzzer
-        int pin = 11;
+        private int pin = 11;
         //track in song to play
-        int track = 0;
+        private int track = 0;
         //extra tab so indentation difference when button is pressed
-        string buttonAdjustment = "\t";
+        private string buttonAdjustment = "\t";
         //pin for button
-        int buttonNumber = 13;
+        private int buttonNumber = 13;
         //whether to pull up or down - false is down, true is up.
-        bool buttonHigh = false;
+        private bool buttonHigh = false;
 
         //does nothing extra from base
         public PicoWriter(Song s) : base(s)

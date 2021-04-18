@@ -45,7 +45,7 @@ namespace Microcontroller_Music
         //used to store the start point (in semiquavers) of each bar in their respective line
         private int[] barStarts;
         //brush used to make black objects appear on canvas.
-        readonly SolidColorBrush black;
+        private readonly SolidColorBrush black;
         //used to store the height of the canvas, so it can be adjuste to fit the whole song on page.
         private double canvasHeight;
         //used to set the width of the canvas. changed by the zoom functions.
@@ -318,6 +318,7 @@ namespace Microcontroller_Music
                 //give the line some drawing properties and add it to canvas.
                 staveLine.Stroke = black;
                 staveLine.StrokeThickness = staveThickness;
+                Canvas.SetZIndex(staveLine, 3);
                 canvas.Children.Add(staveLine);
             }
         }
@@ -850,7 +851,7 @@ namespace Microcontroller_Music
         }
 
         //checks if an accidental should be drawn on a note.
-        public bool CheckDrawAccidental(ref List<int> usedPitchAccidentals, ref List<int> usedPitches, int KeySigIndex, int pitch, int accidental)
+        private bool CheckDrawAccidental(ref List<int> usedPitchAccidentals, ref List<int> usedPitches, int KeySigIndex, int pitch, int accidental)
         {
             bool drawAccidental = false;
             //if the pitch is already present in the bar...
@@ -912,7 +913,7 @@ namespace Microcontroller_Music
         }
 
         //draws the lines between groups of notes - very long and somewhat repetitive
-        public void DrawStems(ref Canvas canvas, int barStart, int lineStart, int trackIndex, int barIndex, int startIndex, int endIndex)
+        private void DrawStems(ref Canvas canvas, int barStart, int lineStart, int trackIndex, int barIndex, int startIndex, int endIndex)
         {
             //arrays to store various pieces of information about the notes in the group
             int[] pitches = new int[endIndex - startIndex + 1];
@@ -1102,7 +1103,6 @@ namespace Microcontroller_Music
                 beam.Points.Add(new Point(p1.X, p1.Y - lineGap / 2));
                 canvas.Children.Add(beam);
                 barContents[trackIndex][barIndex].Add(beam);
-                bool previousNoteWasSemi = false;
                 for (int i = 0; i <= endIndex - startIndex; i++)
                 {
                     //draw note stems
@@ -1184,7 +1184,7 @@ namespace Microcontroller_Music
                         barContents[trackIndex][barIndex].Add(semiBeamR);
                     }
                     //handles when the note to the left isn't a semiquaver but neither is the one to the right so it has to go half to the right to 
-                    else if (!previousNoteWasSemi && lengths[i] == 1 && startPoints[i + 1] != startPoints[i] && lengths[i + 1] != 1)
+                    else if ((i==0 || lengths[i-1] != 1) && lengths[i] == 1 && startPoints[i + 1] != startPoints[i] && lengths[i + 1] != 1)
                     {
                         Polygon semiBeamHalf = new Polygon
                         {
@@ -1196,14 +1196,6 @@ namespace Microcontroller_Music
                         semiBeamHalf.Points.Add(new Point(stem.X1 + noteHeadWidth, semiBottomY + ((noteHeadWidth / (double)semiquaverwidth) * beamGradient) * lineGap / 2));
                         canvas.Children.Add(semiBeamHalf);
                         barContents[trackIndex][barIndex].Add(semiBeamHalf);
-                    }
-                    if (lengths[i] == 0 && i < lengths.Length - 1 && startPoints[i + 1] != startPoints[i])
-                    {
-                        previousNoteWasSemi = true;
-                    }
-                    else if (lengths[i] != 0)
-                    {
-                        previousNoteWasSemi = false;
                     }
                 }
             }
@@ -1231,7 +1223,7 @@ namespace Microcontroller_Music
         //canvas so you can add things to the image
         //barstart gives the x coord to add to to place the note
         //lineStart in this instance... it would be nice to give it as the E4 in treble and G2 in bass. then you can compare.
-        public void DrawNote(ref Canvas canvas, int barStart, int lineStart, int trackIndex, int barIndex, int noteIndex, bool drawAccidental, double startDisplacement)
+        private void DrawNote(ref Canvas canvas, int barStart, int lineStart, int trackIndex, int barIndex, int noteIndex, bool drawAccidental, double startDisplacement)
         {
             //gets the note being drawn
             Note note = SongToDraw.GetTracks(trackIndex).GetBars(barIndex).GetNotes(noteIndex) as Note;
@@ -1496,7 +1488,7 @@ namespace Microcontroller_Music
         }
 
         //draws a rest on canvas using an image
-        public void DrawRest(ref Canvas canvas, int barStart, int lineStart, int trackIndex, int barIndex, int noteIndex)
+        private void DrawRest(ref Canvas canvas, int barStart, int lineStart, int trackIndex, int barIndex, int noteIndex)
         {
             //gets the rest for information
             Rest rest = SongToDraw.GetTracks(trackIndex).GetBars(barIndex).GetNotes(noteIndex) as Rest;
@@ -1548,7 +1540,7 @@ namespace Microcontroller_Music
         }
 
         //takes the note and finds how far from the bottom line of the stave it should be (in note positions, which are linegap / 2)
-        public int FindLineDifferenceFromMiddleC(int pitch, bool treble)
+        private int FindLineDifferenceFromMiddleC(int pitch, bool treble)
         {
             //middle c is 40, so this is the difference in pitch
             int distanceFromC = pitch - 40;
@@ -1606,7 +1598,7 @@ namespace Microcontroller_Music
         }
 
         //used to find the track, bar, pitch and semiquaver position of the mouse, as well as whether a note will fit there
-        public bool WhereAmI(ref int trackIndex, ref int barIndex, ref int notePos, ref int pitch, int length, Point position)
+        private bool WhereAmI(ref int trackIndex, ref int barIndex, ref int notePos, ref int pitch, int length, Point position)
         {
             //if statement to make sure notes can't be placed in the space at top of page, and extra linegap / 4 to make sure placement rules are consistent with
             //the other lines.
@@ -1755,7 +1747,7 @@ namespace Microcontroller_Music
         }
 
         //does FindDifferenceFromMiddleC backwards
-        public int ReverseFindLineDifferenceFromMiddleC(double lineDiff, bool treble)
+        private int ReverseFindLineDifferenceFromMiddleC(double lineDiff, bool treble)
         {
             //reverses changes made to adjust where middle c is in different keys
             lineDiff = (treble) ? -2 * lineDiff / lineGap + 3 : -2 * lineDiff / lineGap - 9;

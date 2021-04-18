@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.IO;
-using System.Xml;
-using System.Xml.Serialization;
+﻿using System.Collections.Generic;
 using System.Runtime.Serialization;
 
 namespace Microcontroller_Music
@@ -39,10 +32,10 @@ namespace Microcontroller_Music
         }
 
         #region getters
-        //returns the list of bars in track
-        public List<Bar> GetBars()
+        //returns the number of bars in the track
+        public int GetBarCount()
         {
-            return Bars;
+            return Bars.Count;
         }
 
         //returns the bar at a given index
@@ -86,13 +79,7 @@ namespace Microcontroller_Music
             }
             //then delete the note
             Bars[barIndex].DeleteNote(noteIndex, (barIndex != Bars.Count - 1), newLength);
-        }
-
-        //changes the time signature of the bar.
-        public void ChangeTimeSig(int barIndex, int MaxLength)
-        {
-            Bars[barIndex].ChangeTimeSig(MaxLength);
-        }
+        }+
 
         //really just calls togglestaccato
         public void ToggleStaccato(int noteIndex, int barIndex)
@@ -329,6 +316,7 @@ namespace Microcontroller_Music
             Bars.Insert(bar, new Bar(Bars[Bars.Count - 1].GetMaxLength(), Bars[Bars.Count - 1].GetKeySig()));
             //fix all the rests in the previous bar to make sure that it is full length
             Bars[bar - 1].FixSpacing(true);
+            Bars[bar].FixSpacing(bar < Bars.Count - 1);
         }
 
         //removes a bar from the list at index
