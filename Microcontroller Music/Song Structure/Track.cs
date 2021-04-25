@@ -79,7 +79,7 @@ namespace Microcontroller_Music
             }
             //then delete the note
             Bars[barIndex].DeleteNote(noteIndex, (barIndex != Bars.Count - 1), newLength);
-        }+
+        }
 
         //really just calls togglestaccato
         public void ToggleStaccato(int noteIndex, int barIndex)

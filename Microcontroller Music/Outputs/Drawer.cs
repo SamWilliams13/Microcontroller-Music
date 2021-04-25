@@ -622,8 +622,8 @@ namespace Microcontroller_Music
             totalLines = barsPerLine.Count;
             //initialise line starts with the number of lines required.
             lineStarts = new int[totalLines];
-            //calculate the height of the canvas using the title height added to the total number of lines for each track x number of tracks x height of each line;
-            canvasHeight = extraHeight + (totalLines * lineHeight * totalInstruments);
+            //calculate the height of the canvas using the title height added to the total number of lines for each track x number of tracks x height of each line with some extra height at bottom.
+            canvasHeight = 2 * extraHeight + (totalLines * lineHeight * totalInstruments);
             //update the height of the canvas
             canvas.Height = canvasHeight;
         }
@@ -1614,7 +1614,7 @@ namespace Microcontroller_Music
             //calculate which line group the user is on
             int lineIndex = (line - trackIndex) / totalInstruments;
             //if it is after all the lines with bars on them stop here
-            if (lineIndex > barsPerLine.Count)
+            if (lineIndex >= barsPerLine.Count)
             {
                 return false;
             }

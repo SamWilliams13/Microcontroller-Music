@@ -271,11 +271,17 @@ namespace Microcontroller_Music
                     //drawer finds where in the song the user has clicked, and if it represents an actual place a note can be added
                     if (drawer.FindMouseLeft(ref SheetMusic, ref track, ref bar, ref semipos, ref pitch, noteLength, e))
                     {
+                        //check if a new bar is created when the note is placed.
+                        bool drawWholePage = false;
+                        if (semipos + noteLength >= s.GetTracks(0).GetBars(bar).GetMaxLength() && bar == s.GetTotalBars() - 1)
+                        {
+                            drawWholePage = true;
+                        }
                         //try to add the note to the song
                         s.AddNote(track, bar, new Note(noteLength, semipos, pitch));
                         //redraw the song to reflect the changes
                         //if it might create a new bar then update the whole canvas
-                        if (semipos + noteLength >= s.GetTracks(0).GetBars(bar).GetMaxLength() && bar == s.GetTotalBars() - 2)
+                        if (drawWholePage)
                         {
                             drawer.DrawPage(ref SheetMusic, (int)Zoom.Value);
                         }
