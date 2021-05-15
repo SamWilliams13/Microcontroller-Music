@@ -1,28 +1,55 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Bar xmlns:i="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://schemas.datacontract.org/2004/07/Microcontroller_Music">
-      <KeySigIndex>0</KeySigIndex>
-      <Length>2</Length>
-      <MaxLength>16</MaxLength>
+      <KeySigIndex>-2</KeySigIndex>
+      <Length>16</Length>
+      <MaxLength>12</MaxLength>
       <Notes>
             <Symbol z:Id="i1" i:type="Note" xmlns:z="http://schemas.microsoft.com/2003/10/Serialization/">
                   <Length>2</Length>
                   <StartPoint>0</StartPoint>
                   <Accidental>0</Accidental>
-                  <Pitch>52</Pitch>
+                  <Pitch>51</Pitch>
+                  <Staccato>false</Staccato>
+                  <Tie i:nil="true" />
+                  <TiedTo z:Id="i2" i:type="Note">
+                        <Length>2</Length>
+                        <StartPoint>14</StartPoint>
+                        <Accidental>0</Accidental>
+                        <Pitch>51</Pitch>
+                        <Staccato>false</Staccato>
+                        <Tie z:Ref="i1" />
+                        <TiedTo i:nil="true" />
+                  </TiedTo>
+            </Symbol>
+            <Symbol z:Id="i3" i:type="Note" xmlns:z="http://schemas.microsoft.com/2003/10/Serialization/">
+                  <Length>2</Length>
+                  <StartPoint>2</StartPoint>
+                  <Accidental>0</Accidental>
+                  <Pitch>51</Pitch>
                   <Staccato>false</Staccato>
                   <Tie i:nil="true" />
                   <TiedTo i:nil="true" />
             </Symbol>
-            <Symbol z:Id="i2" i:type="Rest" xmlns:z="http://schemas.microsoft.com/2003/10/Serialization/">
+            <Symbol z:Id="i4" i:type="Note" xmlns:z="http://schemas.microsoft.com/2003/10/Serialization/">
                   <Length>2</Length>
-                  <StartPoint>2</StartPoint>
-            </Symbol>
-            <Symbol z:Id="i3" i:type="Rest" xmlns:z="http://schemas.microsoft.com/2003/10/Serialization/">
-                  <Length>4</Length>
                   <StartPoint>4</StartPoint>
+                  <Accidental>0</Accidental>
+                  <Pitch>51</Pitch>
+                  <Staccato>false</Staccato>
+                  <Tie z:Id="i5" i:type="Note">
+                        <Length>2</Length>
+                        <StartPoint>6</StartPoint>
+                        <Accidental>0</Accidental>
+                        <Pitch>51</Pitch>
+                        <Staccato>false</Staccato>
+                        <Tie i:nil="true" />
+                        <TiedTo z:Ref="i4" />
+                  </Tie>
+                  <TiedTo i:nil="true" />
             </Symbol>
-            <Symbol z:Id="i4" i:type="Rest" xmlns:z="http://schemas.microsoft.com/2003/10/Serialization/">
-                  <Length>8</Length>
+            <Symbol z:Ref="i5" xmlns:z="http://schemas.microsoft.com/2003/10/Serialization/" />
+            <Symbol z:Id="i6" i:type="Rest" xmlns:z="http://schemas.microsoft.com/2003/10/Serialization/">
+                  <Length>4</Length>
                   <StartPoint>8</StartPoint>
             </Symbol>
       </Notes>

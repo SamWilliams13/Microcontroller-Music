@@ -1632,7 +1632,7 @@ namespace Microcontroller_Music
             for (int i = barsPerLine[lineIndex] - 1; i >= 0; i--)
             {
                 //if the mouse is to the right of the bar start then the bar has been found
-                if (i == 0 || xSemiPos >= barStarts[barsBefore + i - 1] + barLengths[barsBefore + i - 1] - 2)
+                if ((rightClick && (i == 0 || xSemiPos >= barStarts[barsBefore + i - 1] + barLengths[barsBefore + i - 1] - 2)) || (!rightClick && xSemiPos >= barStarts[barsBefore + i]))
                 {
                     //unless the mouse position is after the end of the bar, in which case it failed
                     if (xSemiPos - barStarts[barsBefore + i] > SongToDraw.GetTracks(trackIndex).GetBars(barsBefore + i ).GetMaxLength() + 1 || position.X < reservedForTrackTitles)
@@ -1655,7 +1655,14 @@ namespace Microcontroller_Music
             pitch = ReverseFindLineDifferenceFromMiddleC((int)position.Y - (lineStarts[lineIndex] + (lineHeight * (trackIndex)) + ((maxLinesAbove + 4) * lineGap)), SongToDraw.GetTracks(trackIndex).GetTreble());
             //preview brush is set to a colour based on whether or not it can be placed
             SolidColorBrush previewBrush;
-            if(rightClick && SongToDraw.FindNote(trackIndex, barIndex, pitch, notePos) != -1)
+            //make it visible
+            Preview.Visibility = Visibility.Visible;
+            if (xSemiPos < barStarts[barIndex])
+            {
+                Preview.Visibility = Visibility.Hidden;
+                previewBrush = black;
+            }
+            else if(rightClick && SongToDraw.FindNote(trackIndex, barIndex, pitch, notePos) != -1)
             {
                 previewBrush = new SolidColorBrush()
                 {
@@ -1742,8 +1749,6 @@ namespace Microcontroller_Music
             Canvas.SetTop(Preview, (lineStarts[lineIndex] + (lineHeight * (trackIndex)) + ((maxLinesAbove + 4) * lineGap)) - previewPitch * lineGap / 2 - lineGap / 4);
             //rotate to make it look nice
             Preview.RenderTransform = new RotateTransform(-20);
-            //make it visible
-            Preview.Visibility = Visibility.Visible;
             return true;
         }
 
