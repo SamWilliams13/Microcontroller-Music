@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Timers;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -46,6 +47,14 @@ namespace Microcontroller_Music
         private readonly ContextMenu contextMenu = new ContextMenu();
         //boolean to track whether the user is in state of adding a repeat and where the repeat was started
         private int repeatStart = -1;
+        //tracks whether to ask the user to save
+        private bool somethingChanged = false;
+        //tracks whether there is a bar to be copied
+        private bool copying = false;
+        //tracks the index of the bar being copied
+        private int copiedBarIndex;
+        //timer for playing on midi
+        Timer timer;
 
         //makes a new window at launch
         public MainWindow()
@@ -224,19 +233,35 @@ namespace Microcontroller_Music
                 writer.Update(s);
                 //in an if statement in case user quits out of dialog.
                 //otherwise .play() displays the dialog and plays the song
-                if (writer.Play())
+                int timerTime = 0;
+                if (writer.Play(ref timerTime))
                 {
                     //change content od button to reflect new state
                     Play_Button.Content = "Stop";
+                    timer = new Timer(timerTime);
+                    timer.Elapsed += SongDone;
+                    timer.AutoReset = true;
+                    timer.Enabled = true;
                 }
             }
             //if button says stop then the playback needs to stop
             else
             {
                 //change the button to reflect the changed state
+                timer.Stop();
                 Play_Button.Content = "Play";
                 writer.Stop();
             }
+        }
+
+        public void SongDone(Object source, ElapsedEventArgs e)
+        {
+            this.Dispatcher.Invoke(() =>
+            {
+                Play_Button.Content = "Play";
+            });
+            writer.Stop();
+            (source as Timer).Enabled = false;
         }
 
         //stops the preview from continuing after the program has closed
@@ -248,9 +273,10 @@ namespace Microcontroller_Music
                 writer.Stop();
             }
             //ask user if they want to save before they quit. useful.
-            if (GenerateYesNoDialog("Closing App", "Would you like to save?"))
+            if (somethingChanged && GenerateYesNoDialog("Closing App", "Would you like to save?"))
             {
                 SaveFile();
+                somethingChanged = false;
             }
         }
 
@@ -269,7 +295,7 @@ namespace Microcontroller_Music
                 if (!(e.GetPosition(MainScroll).Y > (int)MainScroll.Height - 20) && !(e.GetPosition(MainScroll).X > (int)MainScroll.Width - 20))
                 {
                     //drawer finds where in the song the user has clicked, and if it represents an actual place a note can be added
-                    if (drawer.FindMouseLeft(ref SheetMusic, ref track, ref bar, ref semipos, ref pitch, noteLength, e))
+                    if (drawer.FindMouseLeft(ref SheetMusic, ref track, ref bar, ref semipos, ref pitch, noteLength, e, false))
                     {
                         //check if a new bar is created when the note is placed.
                         bool drawWholePage = false;
@@ -278,7 +304,11 @@ namespace Microcontroller_Music
                             drawWholePage = true;
                         }
                         //try to add the note to the song
-                        s.AddNote(track, bar, new Note(noteLength, semipos, pitch));
+                        bool worked = s.AddNote(track, bar, new Note(noteLength, semipos, pitch));
+                        if(worked)
+                        {
+                            somethingChanged = true;
+                        }
                         //redraw the song to reflect the changes
                         //if it might create a new bar then update the whole canvas
                         if (drawWholePage)
@@ -290,6 +320,7 @@ namespace Microcontroller_Music
                         {
                             drawer.DrawBar(ref SheetMusic, bar, track);
                         }
+
                     }
                 }
             }
@@ -312,10 +343,12 @@ namespace Microcontroller_Music
         private void CreateNewFile(object sender, RoutedEventArgs e)
         {
             //ask user to save previous file
-            if (GenerateYesNoDialog("Closing File", "Would you like to save?"))
+            if (somethingChanged && GenerateYesNoDialog("Closing File", "Would you like to save?"))
             {
                 SaveFile();
+                somethingChanged = false;
             }
+            copying = false;
             //reset filepath to prevent overwriting old file
             filePath = "";
             //stop the midi writer from playing anything, closing the clock and output
@@ -329,8 +362,10 @@ namespace Microcontroller_Music
             //if they enter evrything properly
             if (createSong.ShowDialog() == true)
             {
+                int tempo = 120;
                 //make sure the tempo entered is an integer
-                int.TryParse(createSong.Tempo.Text, out int tempo);
+                int.TryParse(createSong.Tempo.Text, out tempo);
+                if (tempo > 300 || tempo < 30) tempo = 120;
                 //make a new file with the given info. key sig selected index can be converted to an integer key sig, same for timesig. check their respective dialogs to see how it is done.
                 NewFile(createSong.SongTitle.Text, tempo, createSong.KeySig.SelectedIndex - 7, createSong.TimeSigTop.SelectedIndex + 2,
                     (int)Math.Pow(2, createSong.TimeSigBottom.SelectedIndex + 1), createSong.TrackTitle.Text, createSong.Key.SelectedIndex);
@@ -343,10 +378,12 @@ namespace Microcontroller_Music
         private void OpenExistingFile(object sender, RoutedEventArgs e)
         {
             //ask user to save previous file
-            if (GenerateYesNoDialog("Closing File", "Would you like to save?"))
+            if (somethingChanged && GenerateYesNoDialog("Closing File", "Would you like to save?"))
             {
                 SaveFile();
             }
+            somethingChanged = false;
+            copying = false;
             filePath = "";
             //lets user find an mmf file in their documents
             OpenFileDialog fileOpen = new OpenFileDialog
@@ -417,7 +454,7 @@ namespace Microcontroller_Music
                 bar = -1;
                 semipos = -1;
                 pitch = -1;
-                drawer.FindMouseLeft(ref SheetMusic, ref track, ref bar, ref semipos, ref pitch, noteLength, e);
+                drawer.FindMouseLeft(ref SheetMusic, ref track, ref bar, ref semipos, ref pitch, noteLength, e, true);
                 MakeContextMenu();
             }
         }
@@ -552,6 +589,25 @@ namespace Microcontroller_Music
                 repeatHandler.Click += new RoutedEventHandler(DeleteRepeat_Click);
             }
             barMenu.Items.Add(repeatHandler);
+            //copy button
+            MenuItem copyButton = new MenuItem
+            {
+                Header = "Copy",
+                Tag = bar
+            };
+            copyButton.Click += CopyBar_Click;
+            barMenu.Items.Add(copyButton);
+            //if its copying have a paste option
+            if (copying)
+            {
+                MenuItem pasteButton = new MenuItem
+                {
+                    Header = "Paste After",
+                    Tag = bar
+                };
+                pasteButton.Click += PasteBar_Click;
+                barMenu.Items.Add(pasteButton);
+            }
             return barMenu;
         }
 
@@ -683,6 +739,7 @@ namespace Microcontroller_Music
                     s.AddRepeat(repeatStart, repeatEnd, addRepeat.GetRepeatCount());
                     repeatStart = -1;
                     drawer.DrawPage(ref SheetMusic, (int)Zoom.Value);
+                    somethingChanged = true;
                 }
             }
         }
@@ -692,13 +749,20 @@ namespace Microcontroller_Music
         {
             int repeatIndex = Convert.ToInt32((sender as MenuItem).Tag);
             s.RemoveRepeat(repeatIndex);
+            somethingChanged = true;
             drawer.DrawPage(ref SheetMusic, (int)Zoom.Value);
         }
 
         //menu click - calls insert bar at to add a new bar after the one selected - updates the canvas to reflect change
         private void InsertBarMenu_Click(object sender, RoutedEventArgs e)
         {
-            s.InsertBarAt(Convert.ToInt32((sender as MenuItem).Tag));
+            int barToAddAfter = Convert.ToInt32((sender as MenuItem).Tag);
+            s.InsertBarAt(barToAddAfter);
+            if(copying && barToAddAfter < copiedBarIndex)
+            {
+                copiedBarIndex++;
+            }
+            somethingChanged = true;
             drawer.DrawPage(ref SheetMusic, (int)Zoom.Value);
         }
 
@@ -706,6 +770,7 @@ namespace Microcontroller_Music
         private void SelectableKeySig_Click(object sender, RoutedEventArgs e)
         {
             s.ChangeKeySig(Convert.ToInt32((sender as MenuItem).Tag), bar);
+            somethingChanged = true;
             drawer.DrawPage(ref SheetMusic, (int)Zoom.Value);
         }
 
@@ -717,7 +782,8 @@ namespace Microcontroller_Music
             if (timeChange.ShowDialog() == true)
             {
                 //change the time sig of the selected bar
-                s.ChangeBarLength((int)(sender as MenuItem).Tag, timeChange.GetTopNumber(), timeChange.GetBottomNumber());
+                s.ChangeBarLength((int)(sender as MenuItem).Tag, timeChange.GetTopNumber(), timeChange.GetBottomNumber(), true);
+                somethingChanged = true;
                 //update canvas to reflect change
                 drawer.DrawPage(ref SheetMusic, (int)Zoom.Value);
             }
@@ -738,6 +804,7 @@ namespace Microcontroller_Music
             {
                 s.CreateConnection(track, bar, noteIndex, producer.Tag as Symbol, true);
             }
+            somethingChanged = true;
             //update canvas to reflect the change
             drawer.DrawBar(ref SheetMusic, bar, track);
         }
@@ -751,6 +818,7 @@ namespace Microcontroller_Music
                 //if it fails that means a new track must be created first so that canvas drawing doesn't crash
                 if (!s.DeleteTrack(track))
                 {
+                    copying = false;
                     //send the user to the same method called by add track in the song menu
                     AddTrack_Click(sender, e);
                     //make the track look clear to user by deleting all but 1 bar
@@ -766,6 +834,7 @@ namespace Microcontroller_Music
                     //then you can remove the track from the song
                     s.DeleteTrack(track);
                 }
+                somethingChanged = true;
                 //update canvas to reflect change
                 drawer.DrawPage(ref SheetMusic, (int)Zoom.Value);
             }
@@ -783,6 +852,11 @@ namespace Microcontroller_Music
                     s.NewBar(0);
                     s.DeleteBar(bar);
                 }
+                somethingChanged = true;
+                if(copying == true && bar < copiedBarIndex)
+                {
+                    copiedBarIndex--;
+                }
                 //update canvas to reflect change
                 drawer.DrawPage(ref SheetMusic, (int)Zoom.Value);
             }
@@ -792,8 +866,9 @@ namespace Microcontroller_Music
         private void StaccatoClick(object sender, RoutedEventArgs e)
         {
             s.ToggleStaccato(track, bar, noteIndex);
+            somethingChanged = true;
             //update canvas to reflect change
-            drawer.DrawBar(ref SheetMusic, track, bar);
+            drawer.DrawBar(ref SheetMusic, bar, track);
         }
 
         //menu click - changes the accidental of the selected note
@@ -812,6 +887,7 @@ namespace Microcontroller_Music
             {
                 s.ChangeAccidental(track, bar, noteIndex, -1);
             }
+            somethingChanged = true;
             //update canvas to reflect the changes
             drawer.DrawBar(ref SheetMusic, bar, track);
         }
@@ -825,6 +901,7 @@ namespace Microcontroller_Music
             {
                 drawer.DrawBar(ref SheetMusic, bar - 1, track);
             }
+            somethingChanged = true;
             drawer.DrawBar(ref SheetMusic, bar, track);
         }
 
@@ -837,9 +914,10 @@ namespace Microcontroller_Music
             {
                 //makes the new track using info from the list of time sigs and key sigs, and the dialog box
                 s.NewTrack(createTrack.GetTitle(), s.GetKeySigs(0), s.GetTimeSigs(0).top, s.GetTimeSigs(0).bottom, createTrack.GetTreble());
+                somethingChanged = true;
+                //update canvas to reflect change
+                drawer.DrawPage(ref SheetMusic, (int)Zoom.Value);
             }
-            //update canvas to reflect change
-            drawer.DrawPage(ref SheetMusic, (int)Zoom.Value);
         }
 
         //change bpm - accessed from song menu
@@ -867,6 +945,7 @@ namespace Microcontroller_Music
                         //update the midi player
                         Play_Button.Content = "Play";
                         writer.UpdateBPM();
+                        somethingChanged = true;
                     }
                 }
                 //if it isn't a number, call an error
@@ -887,7 +966,60 @@ namespace Microcontroller_Music
                 //changes the title and updates the canvas to reflect the change
                 s.SetTitle(newTitleDialog.GetNewTItle());
                 drawer.DrawPage(ref SheetMusic, (int)Zoom.Value);
+                somethingChanged = true;
             }
+        }
+
+        //method to change the index of the bar being copied
+        private void CopyBar_Click(object sender, RoutedEventArgs e)
+        {
+            copying = true;
+            copiedBarIndex = bar;
+        }
+
+        //method to duplicate a bar and add it to the song. essentially saves it and opens again.
+        private void PasteBar_Click(object sender, RoutedEventArgs e)
+        {
+            int barToAddAfter = Convert.ToInt32((sender as MenuItem).Tag);
+            //make a new bar
+            s.InsertBarAt(barToAddAfter);
+            if (barToAddAfter < copiedBarIndex)
+            {
+                copiedBarIndex++;
+            }
+            int newBarIndex = barToAddAfter + 1;
+            //match the time sigs
+            s.ChangeBarLength(newBarIndex, s.GetTimeSigs(copiedBarIndex).top, s.GetTimeSigs(copiedBarIndex).bottom, false);
+            //match the key sigs
+            s.ChangeKeySig(s.GetKeySigs(copiedBarIndex), newBarIndex);
+            for (int i = 0; i < s.GetTrackCount(); i++)
+            {
+                //makes a serialiser for bar
+                DataContractSerializer serializer = new DataContractSerializer(typeof(Bar));
+                //same code as writing file
+                XmlWriterSettings settings = new XmlWriterSettings { Indent = true, IndentChars = "      ", NewLineOnAttributes = false };
+                //makes a writer to create a file
+                string tempFilePath = Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location) + "/temp.txt";
+                XmlWriter writer = XmlWriter.Create(tempFilePath, settings);
+                //makes a serialised form of the song and writes it to file
+                serializer.WriteObject(writer, s.GetTracks(i).GetBars(copiedBarIndex));
+                //closes the file
+                writer.Close();
+                //to temporarily store the data for reading
+                MemoryStream memoryStream = new MemoryStream();
+                //makes it into a nice form to memorystream
+                byte[] data = Encoding.UTF8.GetBytes(File.ReadAllText(tempFilePath));
+                //adds the file data into a stream so you can read it with a serializer
+                memoryStream.Write(data, 0, data.Length);
+                //puts the stream to the start so it reads correctly in the next line
+                memoryStream.Position = 0;
+                //makes a song out of the XML with the default methods
+                
+                s.CopyBar(i, newBarIndex, (Bar)serializer.ReadObject(memoryStream));
+            }
+            s.FixBarSpacing(newBarIndex);
+            somethingChanged = true;
+            drawer.DrawPage(ref SheetMusic, (int)Zoom.Value);
         }
 
         //handles the note selectors on the right side of the screen.
@@ -930,6 +1062,11 @@ namespace Microcontroller_Music
         //accessed from export menu
         private void BitmapExport_Click(object sender, RoutedEventArgs e)
         {
+            double horiScroll = MainScroll.HorizontalOffset;
+            double vertiScroll = MainScroll.VerticalOffset;
+            //moves the scroll focus to top left to prevent distortion
+            MainScroll.ScrollToVerticalOffset(0.0);
+            MainScroll.ScrollToHorizontalOffset(0.0);
             //removes the preview note from the image
             drawer.MakePreviewInvisible();
             //makes the user find a place to save the file
@@ -947,6 +1084,9 @@ namespace Microcontroller_Music
                 this.Dispatcher.Invoke(bmp, System.Windows.Threading.DispatcherPriority.Loaded, saveFile.FileName);
                 //zoom it out back to where it was
                 drawer.Zoom(SheetMusic, (int)Zoom.Value);
+                //return the scrollviewer to where it was
+                MainScroll.ScrollToVerticalOffset(vertiScroll);
+                MainScroll.ScrollToHorizontalOffset(horiScroll);
             }
         }
 

@@ -134,7 +134,7 @@ namespace Microcontroller_Music
                     }
                     //if there are less bars in the track than the song thinks there should be
                     //add bars until it is the right length
-                    else if (t.GetBarCount()< totalBars)
+                    else if (t.GetBarCount() < totalBars)
                     {
                         somethingChanged = true;
                         for (int j = 0; j < totalBars - t.GetBarCount(); j++)
@@ -246,7 +246,7 @@ namespace Microcontroller_Music
         public bool DoesARepeatStartorEndOn(int index, int startEnd)
         {
 
-            for(int i = 0; i < Repeats.Count; i++)
+            for (int i = 0; i < Repeats.Count; i++)
             {
                 if (Repeats[i][startEnd] == index)
                 {
@@ -270,7 +270,7 @@ namespace Microcontroller_Music
             }
             return -1;
         }
-            
+
 
         //used to draw the number above the end repeat symbol when necessary
         public int GetNumberOfRepeatsAtEndIndex(int endIndex)
@@ -365,13 +365,15 @@ namespace Microcontroller_Music
         }
 
         //adds a note to a given bar in a given track if the track exists, and updates the bars as required
-        public void AddNote(int track, int bar, Symbol n)
+        public bool AddNote(int track, int bar, Symbol n)
         {
+            bool worked = false;
             if (CheckTrack(track))
             {
-                Tracks[track].AddNote(bar, n);
+                worked = Tracks[track].AddNote(bar, n);
             }
             UpdateTotalBars();
+            return worked;
         }
 
         //used to check if the previous bar needs to be redrawn too when a note is deleted
@@ -518,12 +520,16 @@ namespace Microcontroller_Music
 
         //changes the time signature in the list at the given barIndex
         //changes the time sig at the bar index in each track to reflect this change
-        public void ChangeBarLength(int barIndex, int top, int bottom)
+        public void ChangeBarLength(int barIndex, int top, int bottom, bool warnThem)
         {
-            TimeSigs[barIndex] = new TimeSig(top, bottom);
-            foreach (Track t in Tracks)
+            //make sure the user wants to go ahead
+            if (!warnThem || MainWindow.GenerateYesNoDialog("Confirm action", "By shortening the bar, you will delete any notes inside it which no longer fit. Are you sure you want to do this?"))
             {
-                t.ChangeBarLength(barIndex, GetSigLength(barIndex));
+                TimeSigs[barIndex] = new TimeSig(top, bottom);
+                foreach (Track t in Tracks)
+                {
+                    t.ChangeBarLength(barIndex, GetSigLength(barIndex));
+                }
             }
         }
 
@@ -593,6 +599,22 @@ namespace Microcontroller_Music
                 totalBars--;
                 UpdateTotalBars();
                 return true;
+            }
+        }
+
+        public void CopyBar(int track, int bar, Bar barInfo)
+        {
+            if (CheckTrack(track))
+            {
+                Tracks[track].CopyBar(bar, barInfo);
+            }
+        }
+
+        public void FixBarSpacing(int bar)
+        {
+            for(int i = 0; i < Tracks.Count; i++)
+            {
+                Tracks[i].FixBarSpacing(bar);
             }
         }
         #endregion

@@ -38,12 +38,15 @@ namespace Microcontroller_Music
         private readonly Button okButton;
         //used to differentiate between the dialog closing because it was cancelled or because it was ok'd
         private bool isOK = false;
+        //how many bars there are
+        int barCount;
 
         //constructor
-        public MIDIDetails(int tracks, string[] tracknames) 
+        public MIDIDetails(int tracks, string[] tracknames, int numberOfBars) 
         {
             //uses argument, stores it internally
             noTracks = tracks;
+            barCount = numberOfBars;
             //initialises arrays for the given number of tracks
             trackInstructions = new Label[noTracks]; 
             instrumentSelections = new ComboBox[noTracks];
@@ -55,7 +58,7 @@ namespace Microcontroller_Music
             InitializeComponent();
             //sets the size of the array to be big enough to show all boxes
             //+2 is to account for the output device and okButton rows
-            this.Height = (noTracks + 2) * comboBoxHeight + avoidTaskbarHeight;
+            this.Height = (noTracks + 3) * comboBoxHeight + avoidTaskbarHeight;
             //fills up the combobox in the top row
             GenerateOutputDevices();
             //gives the combobox a default answer to avoid null error
@@ -99,6 +102,15 @@ namespace Microcontroller_Music
         //creates and populates rows in the grid for track selections and the OK button
         public void GenerateRows()
         {
+            //loops through bars to add the bar options to the list
+            for(int i = 0; i < barCount; i++)
+            {
+                startingBar.Items.Add(new ComboBoxItem()
+                {
+                    Content = i + 1
+                });
+            }
+            startingBar.SelectedIndex = 0;
             //loops noTracks times so there is one combobox per track
             for(int i = 0; i < noTracks; i++)
             {
@@ -119,11 +131,11 @@ namespace Microcontroller_Music
                 //fill the combobox with the names of all available instruments for this track
                 PopulateInstrumentSelector(i);
                 //place the label in the track's row
-                    Grid.SetRow(trackInstructions[i], i + 1);
+                    Grid.SetRow(trackInstructions[i], i + 2);
                 //place the label in the left column
                     Grid.SetColumn(trackInstructions[i], 0);
                 //place the combobox in the track's row
-                    Grid.SetRow(instrumentSelections[i], i + 1);
+                    Grid.SetRow(instrumentSelections[i], i + 2);
                 //place the combobox in the right column
                     Grid.SetColumn(instrumentSelections[i], 1);
                 //add the label to the grid
@@ -147,7 +159,7 @@ namespace Microcontroller_Music
             //set the button to call OKPressed when clicked
             okButton.Click += OKPressed;
             //add the button to the bottom right of the dialog box
-            Grid.SetRow(okButton, noTracks + 1);
+            Grid.SetRow(okButton, noTracks + 2);
             Grid.SetColumn(okButton, 1);
             MainGrid.Children.Add(okButton);
 
@@ -186,6 +198,11 @@ namespace Microcontroller_Music
                 //fail out of process
                 this.DialogResult = false;
             }
+        }
+
+        public int GetBarStart()
+        {
+            return startingBar.SelectedIndex;
         }
     }
 }

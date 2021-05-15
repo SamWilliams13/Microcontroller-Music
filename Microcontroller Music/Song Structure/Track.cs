@@ -213,15 +213,18 @@ namespace Microcontroller_Music
         }
 
         //adds a symbol to a given bar
-        public void AddNote(int barIndex, Symbol n)
+        public bool AddNote(int barIndex, Symbol n)
         {
             //tries to add the note to the bar, gets back an integer response
             tempCheck = Bars[barIndex].AddNote(n);
             //generates an error message dependent on what caused the failure
+            bool worked = false;
             if (tempCheck != 0 && tempCheck != 7)
             {
                 MainWindow.GenerateErrorDialog("Invalid Operation", CheckFitErrors[tempCheck]);
+
             }
+            else worked = true;
             //if the bar has reached its max length then add a new bar to the track
             if (Bars[Bars.Count - 1].GetLength() == Bars[Bars.Count - 1].GetMaxLength())
             {
@@ -230,7 +233,7 @@ namespace Microcontroller_Music
             //sort the notes and rest spacing
             Bars[barIndex].SortNotes();
             Bars[barIndex].FixSpacing(barIndex != Bars.Count - 1);
-
+            return worked;
         }
 
         public void ChangeAccidental(int barIndex, int noteIndex, int newAccidental)
@@ -271,9 +274,6 @@ namespace Microcontroller_Music
                 //if there are notes in the bar that do not fit in the new length
                 if (Bars[barIndex].GetMaxLength() > newLength)
                 {
-                    //make sure the user wants to go ahead
-                    if (MainWindow.GenerateYesNoDialog("Confirm action", "By shortening the bar, you will delete any notes inside it which no longer fit. Are you sure you want to do this?"))
-                    {
                         bool noteDeleted;
                         //delete all notes that will no longer fit (while loop needed because of changing indexes in the list whenever a symbol is removed)
                         do
@@ -291,7 +291,6 @@ namespace Microcontroller_Music
                         } while (noteDeleted == true);
                         //then change the time signature of the bar after this is done
                         Bars[barIndex].ChangeTimeSig(newLength);
-                    }
                 }
                 //if all the notes will fit you can just go straight ahead and change it.
                 else Bars[barIndex].ChangeTimeSig(newLength);
@@ -330,6 +329,31 @@ namespace Microcontroller_Music
             }
             //then removes the bar from the list
             Bars.RemoveAt(barIndex);
+        }
+
+        public void CopyBar(int barIndex, Bar barInfo)
+        {
+            Bars[barIndex] = barInfo;
+            //remove any ties at the start and end to prevent breakage
+            for(int i = 0; i < barInfo.GetNoteCount(); i++)
+            {
+                Symbol symb = barInfo.GetNotes(i);
+                //starts on tie
+                if (symb is Note && (symb as Note).GetTiedTo() != null && symb.GetStart() == 0)
+                {
+                    RemoveConnection(barIndex, i, false);
+                }
+                //ends on tie
+                if (symb is Note && (symb as Note).GetTie() != null && barInfo.GetNoteEnd(i) == barInfo.GetMaxLength())
+                {
+                    RemoveConnection(barIndex, i, true);
+                }
+            }
+        }
+
+        public void FixBarSpacing(int bar)
+        {
+            Bars[bar].FixSpacing(true);
         }
         #endregion
     }

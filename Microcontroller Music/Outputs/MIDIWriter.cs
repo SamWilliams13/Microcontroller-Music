@@ -9,6 +9,10 @@ namespace Microcontroller_Music
         private Instrument[] instruments;
         //device used to play the MIDI - Microsoft Wavetable GS Synth tends to be the default
         private OutputDevice output;
+        //used to tell the main window when to stop saying stop
+        private float millis;
+        //used to find the start point of the song
+        private int barStart = 0;
 
         //used to schedule all notes before they are played. no need to have threading and sleep.
         private Clock clock;
@@ -42,7 +46,7 @@ namespace Microcontroller_Music
                 namesArray[i] = songToConvert.GetTracks(i).GetName();
             }
             //make a dialog box with the needed information to let the user select output and instrument
-            MIDIDetails detailsBox = new MIDIDetails(songToConvert.GetTrackCount(), namesArray);
+            MIDIDetails detailsBox = new MIDIDetails(songToConvert.GetTrackCount(), namesArray, songToConvert.GetTotalBars());
             //check the user wants to go ahead
             if (detailsBox.ShowDialog() == true)
             {
@@ -50,6 +54,8 @@ namespace Microcontroller_Music
                 instruments = detailsBox.GetTrackInstruments();
                 //use a different method in dialog box to fetch the output device chosen
                 output = detailsBox.GetOutputDevice();
+                //set up where to start the song
+                barStart = detailsBox.GetBarStart();
                 //start the process of scheduling the notes in the song
                 Write();
                 return true;
@@ -81,7 +87,7 @@ namespace Microcontroller_Music
                 //totalLength is to store the length of the song so far. This is added to after every bar so that the clock can have an idea of where it is
                 float totalLength = 0;
                 //loop through all bars in the track
-                for (int j = 0; j < songToConvert.GetTotalBars(); j++)
+                for (int j = barStart; j < songToConvert.GetTotalBars(); j++)
                 {
                     //get the notes in the bar
                     List<Symbol> barNotes = songToConvert.GetTracks(i).GetBars(j).GetNotes();
@@ -188,14 +194,16 @@ namespace Microcontroller_Music
             //sets the clock to play the note at the needed startpoint
             clock.Schedule(new NoteOnMessage(output, channel, (Pitch)(n.GetPitch() + 20), 80, total + start));
             //sets the clock to stop the note once it is over
-            clock.Schedule(new NoteOffMessage(output, channel, (Pitch)(n.GetPitch() + 20), 80, total + start + t)); 
+            clock.Schedule(new NoteOffMessage(output, channel, (Pitch)(n.GetPitch() + 20), 80, total + start + t));
+            if(total + start + t > millis) millis = total + start + t;
         }
 
         //starts the process of playing the song
-        public bool Play()
+        public bool Play(ref int time)
         {
             if (GetDetails())
             {
+                time = (int)(millis * (60000 / clock.BeatsPerMinute) + 500);
                 return true;
             }
             else return false;

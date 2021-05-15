@@ -159,6 +159,7 @@ namespace Microcontroller_Music
             //calculate where the bars should go and how much space they take
             CalculateBarsPerLineEtc(ref canvas);
             //add the preview note and each of the ledger lines to the canvas so they can move around and be vidible without updating the whole page.
+            Canvas.SetZIndex(Preview, 1);
             canvas.Children.Add(Preview);
             for (int i = 0; i < 4; i++)
             {
@@ -983,7 +984,7 @@ namespace Microcontroller_Music
                     singleLine.X2 = singleLine.X1;
                     singleLine.Y1 = lineStart - (lowestPitch) * lineGap / 2;
                     //if line is enough ledger lines away it goes to a specific point instead of an octave up
-                    singleLine.Y2 = (Math.Abs(highestPitch - 3) > 7) ? lineStart - lineGap : lineStart - (highestPitch + 7) * lineGap / 2;
+                    singleLine.Y2 = (highestPitch - 3 < -7) ? lineStart - lineGap - lineGap / 2: lineStart - (highestPitch + 7) * lineGap / 2;
                     //puts the flag at top of stem
                     Canvas.SetTop(flag, singleLine.Y2);
                     //if it is shorter than a crotchet it will have a flag, so find the image source
@@ -1011,7 +1012,7 @@ namespace Microcontroller_Music
                     singleLine.X2 = singleLine.X1;
                     //similar logic to when step goes up but the note 
                     singleLine.Y1 = lineStart - (highestPitch) * lineGap / 2;
-                    singleLine.Y2 = (Math.Abs(lowestPitch - 3) > 7) ? lineStart - lineGap - lineGap / 2 : lineStart - (lowestPitch - 7) * lineGap / 2;
+                    singleLine.Y2 = ((lowestPitch - 3) > 7) ? lineStart - lineGap - lineGap / 2 : lineStart - (lowestPitch - 7) * lineGap / 2;
                     Canvas.SetTop(flag, singleLine.Y2 - 3 * lineGap);
                     if (lengths[0] < 4)
                     {
@@ -1582,10 +1583,10 @@ namespace Microcontroller_Music
         }
 
         //calls whereami using the mouse position given when clicking
-        public bool FindMouseLeft(ref Canvas canvas, ref int trackIndex, ref int barIndex, ref int notePos, ref int pitch, int length, MouseButtonEventArgs e)
+        public bool FindMouseLeft(ref Canvas canvas, ref int trackIndex, ref int barIndex, ref int notePos, ref int pitch, int length, MouseButtonEventArgs e, bool rightClick)
         {
             var position = e.GetPosition(canvas);
-            bool worked = WhereAmI(ref trackIndex, ref barIndex, ref notePos, ref pitch, length, position);
+            bool worked = WhereAmI(ref trackIndex, ref barIndex, ref notePos, ref pitch, length, position, rightClick);
             return worked;
         }
 
@@ -1593,16 +1594,16 @@ namespace Microcontroller_Music
         public bool FindMouse(ref Canvas canvas, ref int trackIndex, ref int barIndex, ref int notePos, ref int pitch, int length, MouseEventArgs e)
         {
             var position = e.GetPosition(canvas);
-            bool worked = WhereAmI(ref trackIndex, ref barIndex, ref notePos, ref pitch, length, position);
+            bool worked = WhereAmI(ref trackIndex, ref barIndex, ref notePos, ref pitch, length, position, false);
             return worked;
         }
 
         //used to find the track, bar, pitch and semiquaver position of the mouse, as well as whether a note will fit there
-        private bool WhereAmI(ref int trackIndex, ref int barIndex, ref int notePos, ref int pitch, int length, Point position)
+        private bool WhereAmI(ref int trackIndex, ref int barIndex, ref int notePos, ref int pitch, int length, Point position, bool rightClick)
         {
             //if statement to make sure notes can't be placed in the space at top of page, and extra linegap / 4 to make sure placement rules are consistent with
             //the other lines.
-            if (position.Y < extraHeight + lineGap / 4)
+            if (position.Y < extraHeight + 1)
             {
                 //no notes at top of page
                 return false;
@@ -1631,10 +1632,10 @@ namespace Microcontroller_Music
             for (int i = barsPerLine[lineIndex] - 1; i >= 0; i--)
             {
                 //if the mouse is to the right of the bar start then the bar has been found
-                if (xSemiPos >= barStarts[barsBefore + i])
+                if (i == 0 || xSemiPos >= barStarts[barsBefore + i - 1] + barLengths[barsBefore + i - 1] - 2)
                 {
                     //unless the mouse position is after the end of the bar, in which case it failed
-                    if (xSemiPos - barStarts[barsBefore + i] > SongToDraw.GetTracks(trackIndex).GetBars(barsBefore + i).GetMaxLength())
+                    if (xSemiPos - barStarts[barsBefore + i] > SongToDraw.GetTracks(trackIndex).GetBars(barsBefore + i ).GetMaxLength() + 1 || position.X < reservedForTrackTitles)
                     {
                         return false;
                     }
@@ -1654,16 +1655,26 @@ namespace Microcontroller_Music
             pitch = ReverseFindLineDifferenceFromMiddleC((int)position.Y - (lineStarts[lineIndex] + (lineHeight * (trackIndex)) + ((maxLinesAbove + 4) * lineGap)), SongToDraw.GetTracks(trackIndex).GetTreble());
             //preview brush is set to a colour based on whether or not it can be placed
             SolidColorBrush previewBrush;
-            if (SongToDraw.GetTracks(trackIndex).GetBars(barIndex).CheckFit(new Note(length, notePos, pitch)) != 0)
+            if(rightClick && SongToDraw.FindNote(trackIndex, barIndex, pitch, notePos) != -1)
+            {
+                previewBrush = new SolidColorBrush()
+                {
+                    Color = Colors.Blue
+                };
+                Canvas.SetZIndex(Preview, 1);
+            }
+            else if (SongToDraw.GetTracks(trackIndex).GetBars(barIndex).CheckFit(new Note(length, notePos, pitch)) != 0)
             {
                 previewBrush = new SolidColorBrush()
                 {
                     Color = Colors.Gray
                 };
+                Canvas.SetZIndex(Preview, 0);
             }
             else
             {
                 previewBrush = black;
+                Canvas.SetZIndex(Preview, 0);
             }
             //set preview note colour
             Preview.Fill = previewBrush;

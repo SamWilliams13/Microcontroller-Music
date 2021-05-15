@@ -160,7 +160,7 @@ namespace Microcontroller_Music
                     "\n\t\t\tsleep(bars[i+1])" +
                     "\n\t\telse:" +
                     //sets the volume up
-                    "\n\t\t\tp.duty_u16(1000)" +
+                    "\n\t\t\tp.duty_u16(4000)" +
                     //plays the frequency stored for the note
                     "\n\t\t\tp.freq(bars[i])" +
                     //waits for the length of the note
